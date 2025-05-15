@@ -45,15 +45,15 @@ architecture Behavioral of Controller_top is
 
 component nand_model 
 port (
-Dq_Io : inout std_logic_vector(7 downto 0);
-Dqs : inout std_logic;
-Cle : in std_logic;
-Ale : in std_logic;
-Ce_n : in std_logic;
-Clk_We_n : in std_logic;
-Wr_Re_n : in std_logic;
-Wp_n : in std_logic;
-Rb_n : out std_logic      
+    Dq_Io : inout std_logic_vector(7 downto 0);
+    Dqs : inout std_logic;
+    Cle : in std_logic;
+    Ale : in std_logic;
+    Ce_n : in std_logic;
+    Clk_We_n : in std_logic;
+    Wr_Re_n : in std_logic;
+    Wp_n : in std_logic;
+    Rb_n : out std_logic      
 );
 end component;
 
