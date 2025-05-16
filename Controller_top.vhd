@@ -37,7 +37,17 @@ Port (
     clk : in std_logic;
     cmd_register: in std_logic_vector(31 downto 0);
     ctrl_register: in std_logic_vector(31 downto 0);
-    status_register: out std_logic_vector(31 downto 0)
+    status_register: out std_logic_vector(31 downto 0);
+    
+    nand_ce_n : out std_logic;
+    nand_cle : out std_logic;
+    nand_ale : out std_logic;
+    nand_we_n : out std_logic;
+    nand_re_n : out std_logic;
+    nand_wp_n : out std_logic;
+    nand_data : inout std_logic_vector(7 downto 0);
+    nand_rb_n : in std_logic
+    
     );
 end Controller_top;
 
@@ -180,14 +190,6 @@ signal r_data_out :  std_logic_vector (7 downto 0);
 signal r_data_in :  std_logic_vector (7 downto 0);
 signal r_busy :  std_logic;
 
-  ---------  PHY  ---------
------ NAND Flash signal -----
-signal nand_data : std_logic_vector(7 downto 0);
-signal nand_dqs : std_logic := '1'; --interface synchrone
-signal nand_cle, nand_ale : std_logic := '0';
-signal nand_ce_n, nand_we_n, nand_re_n : std_logic := '1';
-signal nand_wp_n : std_logic;
-signal nand_rb_n : std_logic;
 
 ----- Numeric NAND Flash signal -----
 signal ready_busy : std_logic;
@@ -195,18 +197,7 @@ signal ready_busy : std_logic;
 
 begin
 
-nandmodel: nand_model port map
-(
-    Dq_Io => nand_data,
-    Dqs => nand_dqs,
-    Cle => nand_cle,
-    Ale => nand_ale,
-    Ce_n => nand_ce_n,
-    Clk_We_n => nand_we_n,
-    Wr_Re_n => nand_re_n,
-    Wp_n => nand_wp_n,
-    Rb_n => nand_rb_n 
-);
+
 
 CMD_FSM : latch_command port map
 (
