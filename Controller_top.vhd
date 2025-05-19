@@ -286,33 +286,33 @@ begin
                 elsif(cmd_register(0) = '1') then
                     Mstate <= RESET;
                     Sstate <= LATCHCMD;
-                    status_register(12) <= '0'; 
+                    status_register(30) <= '0'; 
                 elsif(cmd_register(1) = '1') then
                     Mstate <= READID;
                     Sstate <= LATCHCMD;
-                    status_register(12) <= '0'; 
+                    status_register(30) <= '0'; 
                 elsif(cmd_register(2) = '1') then
                     Mstate <= READPARAM;
                     Sstate <= LATCHCMD;
-                    status_register(12) <= '0'; 
+                    status_register(30) <= '0'; 
                 elsif(cmd_register(3) = '1') then
                     Mstate <= READSTATUS;
                     Sstate <= LATCHCMD;
-                    status_register(12) <= '0'; 
+                    status_register(30) <= '0'; 
                 elsif(cmd_register(4) = '1') then
                     Mstate <= READ;
                     Sstate <= LATCHCMD;
-                    status_register(12) <= '0'; 
+                    status_register(30) <= '0'; 
                 elsif(cmd_register(5) = '1') then
                     Mstate <= PAGEPROGRAM;
                     Sstate <= LATCHCMD;
-                    status_register(12) <= '0'; 
+                    status_register(30) <= '0'; 
                 elsif(cmd_register(6) = '1') then
                     Mstate <= ERASE;
                     Sstate <= LATCHCMD;
-                    status_register(12) <= '0'; 
+                    status_register(30) <= '0'; 
                 else
-                    status_register(12) <= '1'; 
+                    status_register(30) <= '1'; 
                 end if;
             when RESET =>
                 cmd_in <= x"FF";
@@ -660,6 +660,7 @@ begin
             status_register(5) <= '0';
             status_register(6) <= '0';
             status_register(7) <= '0';
+            status_register(8) <= '0';
         when RESET =>
             status_register(1) <= '1';          
         when READID =>
@@ -674,10 +675,14 @@ begin
             status_register(6) <= '1';    
         when ERASE =>
             status_register(7) <= '1';
+        when SETFEATURES =>
+            status_register(8) <= '1';
+        when GETFEATURES =>
+            status_register(8) <= '1';
         when SUBWAIT =>
             
         when others =>
-            status_register(14) <= '1';
+            status_register(31) <= '1';
     end case;
     case Sstate is
         when SUBIDLE =>
