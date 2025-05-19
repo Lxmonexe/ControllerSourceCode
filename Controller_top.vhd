@@ -53,19 +53,6 @@ end Controller_top;
 
 architecture Behavioral of Controller_top is
 
-component nand_model 
-port (
-    Dq_Io : inout std_logic_vector(7 downto 0);
-    Dqs : inout std_logic;
-    Cle : in std_logic;
-    Ale : in std_logic;
-    Ce_n : in std_logic;
-    Clk_We_n : in std_logic;
-    Wr_Re_n : in std_logic;
-    Wp_n : in std_logic;
-    Rb_n : out std_logic      
-);
-end component;
 
 component latch_command is
 Port (
@@ -540,6 +527,66 @@ begin
                         NextSstate <= Sstate;
                         Mstate <= SUBWAIT;
                         address_cycle_count <= address_cycle_count + 1;
+                    end if;
+                end if;
+            when SETFEATURES =>
+                cmd_in <= x"EF";
+                addr_in <= x"FA";
+                --w_data_in <= x"AA";
+                if(Sstate = LATCHCMD) then
+                    delay_t <= CMDWAIT;
+                    PreviousMstate <= Mstate;
+                    NextSstate <= LATCHADDR;
+                    Mstate <= SUBWAIT;
+                elsif(Sstate = LATCHADDR) then
+                    address_cycle_count <= 0;
+                    delay_t <= ADDRWAIT;
+                    PreviousMstate <= Mstate;
+                    NextSstate <= WRITEDATA;
+                    Mstate <= SUBWAIT;
+                elsif(Sstate = WRITEDATA) then                   
+                    if(read_cycle_count = 3) then
+                        read_cycle_count <= 0;
+                        delay_t <= WRITEWAIT;
+                        PreviousMstate <= Mstate;
+                        NextSstate <= LATCHCMD;
+                        Mstate <= SUBWAIT;
+                    else
+                        delay_t <= WRITEWAIT;
+                        PreviousMstate <= Mstate;
+                        NextSstate <= Sstate;
+                        Mstate <= SUBWAIT;
+                        read_cycle_count <= read_cycle_count + 1;
+                    end if;
+                end if;
+            when GETFEATURES =>
+                cmd_in <= x"EE";
+                addr_in <= x"FA";
+                --w_data_in <= x"AA";
+                if(Sstate = LATCHCMD) then
+                    delay_t <= CMDWAIT;
+                    PreviousMstate <= Mstate;
+                    NextSstate <= LATCHADDR;
+                    Mstate <= SUBWAIT;
+                elsif(Sstate = LATCHADDR) then
+                    address_cycle_count <= 0;
+                    delay_t <= ADDRWAIT;
+                    PreviousMstate <= Mstate;
+                    NextSstate <= WRITEDATA;
+                    Mstate <= SUBWAIT;
+                elsif(Sstate = READDATA) then                   
+                    if(read_cycle_count = 3) then
+                        read_cycle_count <= 0;
+                        delay_t <= WRITEWAIT;
+                        PreviousMstate <= Mstate;
+                        NextSstate <= LATCHCMD;
+                        Mstate <= SUBWAIT;
+                    else
+                        delay_t <= WRITEWAIT;
+                        PreviousMstate <= Mstate;
+                        NextSstate <= Sstate;
+                        Mstate <= SUBWAIT;
+                        read_cycle_count <= read_cycle_count + 1;
                     end if;
                 end if;
             when SUBWAIT =>

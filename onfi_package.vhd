@@ -49,7 +49,7 @@ package onfi is
     constant t_r    : integer := integer(78000.0    / clock_cycle); -- < 78000.0        -- < 25000.0       -- READ PAGE Operation Time    -- * For read parameter, at least
     constant t_ww   : integer := integer(100.0      / clock_cycle); -- > 100.0          -- Look this up    -- Explain this
 
-    type master_states is (IDLE, RESET, READID, READPARAM, PAGEPROGRAM, READSTATUS, READ, ERASE, SUBWAIT);
+    type master_states is (IDLE, RESET, READID, READPARAM, PAGEPROGRAM, READSTATUS, READ, ERASE, SETFEATURES, GETFEATURES ,SUBWAIT);
 	type substates is ( subIDLE, LATCHCMD, LATCHADDR, WRITEDATA, READDATA);
 	type delay_type is (CMDWAIT, ADDRWAIT, WRITEWAIT, READWAIT, WRITEDONE);
 	
