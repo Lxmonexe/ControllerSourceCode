@@ -79,7 +79,18 @@ entity Axi_top_slave_lite_v1_0_S00_AXI is
 		S_AXI_RVALID	: out std_logic;
 		-- Read ready. This signal indicates that the master can
     		-- accept the read data and response information.
-		S_AXI_RREADY	: in std_logic
+		S_AXI_RREADY	: in std_logic;
+		
+		clk : in std_logic;
+		
+		nand_ce_n : out std_logic;
+        nand_cle : out std_logic;
+        nand_ale : out std_logic;
+        nand_we_n : out std_logic;
+        nand_re_n : out std_logic;
+        nand_wp_n : out std_logic;
+        nand_data : inout std_logic_vector(7 downto 0);
+        nand_rb_n : in std_logic
 	);
 end Axi_top_slave_lite_v1_0_S00_AXI;
 
@@ -125,7 +136,54 @@ architecture arch_imp of Axi_top_slave_lite_v1_0_S00_AXI is
 	 --State machine variables
 	signal state_read : std_logic_vector(1 downto 0);
 	signal state_write: std_logic_vector(1 downto 0); 
+	
+	component Controller_top is
+Port ( 
+    clk : in std_logic;
+    cmd_register: in std_logic_vector(31 downto 0);
+    ctrl_register: in std_logic_vector(31 downto 0);
+    status_register: out std_logic_vector(31 downto 0);
+    
+    nand_ce_n : out std_logic;
+    nand_cle : out std_logic;
+    nand_ale : out std_logic;
+    nand_we_n : out std_logic;
+    nand_re_n : out std_logic;
+    nand_wp_n : out std_logic;
+    nand_data : inout std_logic_vector(7 downto 0);
+    nand_rb_n : in std_logic
+    );
+end component;
+	
+	signal cmd_register:  std_logic_vector(31 downto 0);
+    signal ctrl_register:  std_logic_vector(31 downto 0);
+    signal status_register: std_logic_vector(31 downto 0);
+	
 begin
+
+    uut : Controller_top port map
+(
+    clk => clk,
+    cmd_register => cmd_register,
+    ctrl_register => ctrl_register,
+    status_register => status_register,
+    
+    nand_ce_n => nand_ce_n,
+    nand_cle => nand_cle,
+    nand_ale => nand_ale,
+    nand_we_n => nand_we_n,   
+    nand_re_n => nand_re_n,
+    nand_wp_n => nand_wp_n,
+    nand_data => nand_data,
+    nand_rb_n => nand_rb_n
+);
+
+    slv_reg0 <= status_register;
+	ctrl_register <= slv_reg1;
+	cmd_register <= slv_reg2;
+	
+	            
+	            
 	-- I/O Connections assignments
 
 	S_AXI_AWREADY	<= axi_awready;
@@ -210,7 +268,7 @@ begin
 	begin
 	  if rising_edge(S_AXI_ACLK) then 
 	    if S_AXI_ARESETN = '0' then
-	      slv_reg0 <= (others => '0');
+	      --slv_reg0 <= (others => '0');
 	      slv_reg1 <= (others => '0');
 	      slv_reg2 <= (others => '0');
 	      slv_reg3 <= (others => '0');
@@ -220,11 +278,11 @@ begin
 	          case (mem_logic) is
 	          when b"000" =>
 	            for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
-	              if ( S_AXI_WSTRB(byte_index) = '1' ) then
+	             -- if ( S_AXI_WSTRB(byte_index) = '1' ) then
 	                -- Respective byte enables are asserted as per write strobes                   
 	                -- slave registor 0
-	                slv_reg0(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
-	              end if;
+	                --slv_reg0(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
+	              --end if;
 	            end loop;
 	          when b"001" =>
 	            for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
@@ -259,7 +317,7 @@ begin
 	              end if;
 	            end loop;
 	          when others =>
-	            slv_reg0 <= slv_reg0;
+	            --slv_reg0 <= slv_reg0;
 	            slv_reg1 <= slv_reg1;
 	            slv_reg2 <= slv_reg2;
 	            slv_reg3 <= slv_reg3;

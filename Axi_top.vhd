@@ -16,7 +16,14 @@ entity Axi_top is
 	);
 	port (
 		-- Users to add ports here
-
+        nand_ce_n : out std_logic;
+        nand_cle : out std_logic;
+        nand_ale : out std_logic;
+        nand_we_n : out std_logic;
+        nand_re_n : out std_logic;
+        nand_wp_n : out std_logic;
+        nand_data : inout std_logic_vector(7 downto 0);
+        nand_rb_n : in std_logic;
 		-- User ports ends
 		-- Do not modify the ports beyond this line
 
@@ -75,7 +82,16 @@ architecture arch_imp of Axi_top is
 		S_AXI_RDATA	: out std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
 		S_AXI_RRESP	: out std_logic_vector(1 downto 0);
 		S_AXI_RVALID	: out std_logic;
-		S_AXI_RREADY	: in std_logic
+		S_AXI_RREADY	: in std_logic;
+		
+		nand_ce_n : out std_logic;
+        nand_cle : out std_logic;
+        nand_ale : out std_logic;
+        nand_we_n : out std_logic;
+        nand_re_n : out std_logic;
+        nand_wp_n : out std_logic;
+        nand_data : inout std_logic_vector(7 downto 0);
+        nand_rb_n : in std_logic
 		);
 	end component Axi_top_slave_lite_v1_0_S00_AXI;
 
@@ -108,7 +124,15 @@ Axi_top_slave_lite_v1_0_S00_AXI_inst : Axi_top_slave_lite_v1_0_S00_AXI
 		S_AXI_RDATA	=> s00_axi_rdata,
 		S_AXI_RRESP	=> s00_axi_rresp,
 		S_AXI_RVALID	=> s00_axi_rvalid,
-		S_AXI_RREADY	=> s00_axi_rready
+		S_AXI_RREADY	=> s00_axi_rready,
+		nand_ce_n => nand_ce_n,
+        nand_cle => nand_cle,
+        nand_ale => nand_ale,
+        nand_we_n => nand_we_n,   
+        nand_re_n => nand_re_n,
+        nand_wp_n => nand_wp_n,
+        nand_data => nand_data,
+        nand_rb_n => nand_rb_n
 	);
 
 	-- Add user logic here
