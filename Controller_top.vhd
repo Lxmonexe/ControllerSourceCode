@@ -310,6 +310,14 @@ begin
                 elsif(cmd_register(6) = '1') then
                     Mstate <= ERASE;
                     Sstate <= LATCHCMD;
+                    status_register(30) <= '0';
+                elsif(cmd_register(7) = '1') then
+                    Mstate <= SETFEATURES;
+                    Sstate <= LATCHCMD;
+                    status_register(30) <= '0';
+                elsif(cmd_register(8) = '1') then
+                    Mstate <= GETFEATURES;
+                    Sstate <= LATCHCMD;
                     status_register(30) <= '0'; 
                 else
                     status_register(30) <= '1'; 
