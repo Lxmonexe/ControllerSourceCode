@@ -38,6 +38,12 @@ Port (
     ctrl_register: in std_logic_vector(31 downto 0);
     status_register: out std_logic_vector(31 downto 0);
     
+    clk_a_i      : in  std_logic;
+    write_en_a_i : in  std_logic;
+    addr_a_i     : in  std_logic_vector(15 downto 0);
+    data_a_i     : in  std_logic_vector(7 downto 0);
+    data_a_o     : out std_logic_vector(7 downto 0);
+    
     nand_ce_n : out std_logic;
     nand_cle : out std_logic;
     nand_ale : out std_logic;

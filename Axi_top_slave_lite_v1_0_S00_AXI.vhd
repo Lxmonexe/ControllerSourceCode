@@ -2,6 +2,8 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
+use work.log_pkg.all;
+
 entity Axi_top_slave_lite_v1_0_S00_AXI is
 	generic (
 		-- Users to add parameters here
@@ -144,6 +146,12 @@ Port (
     ctrl_register: in std_logic_vector(31 downto 0);
     status_register: out std_logic_vector(31 downto 0);
     
+    clk_a_i      : in  std_logic;
+    write_en_a_i : in  std_logic;
+    addr_a_i     : in  std_logic_vector(15 downto 0);
+    data_a_i     : in  std_logic_vector(7 downto 0);
+    data_a_o     : out std_logic_vector(7 downto 0);
+    
     nand_ce_n : out std_logic;
     nand_cle : out std_logic;
     nand_ale : out std_logic;
@@ -159,14 +167,50 @@ end component;
     signal ctrl_register:  std_logic_vector(31 downto 0);
     signal status_register: std_logic_vector(31 downto 0);
 	
+	
+	component true_dual_port_bram is
+    generic (
+        WIDTH_PORT_A : natural := 8;
+        DEPTH_PORT_A : natural := 32768; -- 2 pages buffer
+        ADDR_WIDTH_A : natural := ilogup(DEPTH_PORT_A);
+        WIDTH_PORT_B : natural := 32;
+        DEPTH_PORT_B : natural := DEPTH_PORT_A * WIDTH_PORT_A / WIDTH_PORT_B;
+        ADDR_WIDTH_B : natural := ilogup(DEPTH_PORT_B)
+        );
+    port (
+        clk_a_i      : in  std_logic;
+        write_en_a_i : in  std_logic;
+        addr_a_i     : in  std_logic_vector(ADDR_WIDTH_A-1 downto 0);
+        data_a_i     : in  std_logic_vector(WIDTH_PORT_A-1 downto 0);
+        data_a_o     : out std_logic_vector(WIDTH_PORT_A-1 downto 0);
+        clk_b_i      : in  std_logic;
+        write_en_b_i : in  std_logic;
+        addr_b_i     : in  std_logic_vector(ADDR_WIDTH_B-1 downto 0);
+        data_b_i     : in  std_logic_vector(WIDTH_PORT_B-1 downto 0);
+        data_b_o     : out std_logic_vector(WIDTH_PORT_B-1 downto 0)
+        );
+    end component;
+    
+    signal clk_b_i      :   std_logic;
+    signal write_en_b_i :   std_logic;
+    signal addr_b_i     :   std_logic_vector(10 downto 0);
+    signal data_b_i     :   std_logic_vector(31 downto 0);
+    signal data_b_o     :  std_logic_vector(31 downto 0);
+
 begin
 
-    uut : Controller_top port map
+    Controller : Controller_top port map
 (
     clk => clk,
     cmd_register => cmd_register,
     ctrl_register => ctrl_register,
     status_register => status_register,
+    
+    clk_a_i => clk_a_i,
+    write_en_a_i => write_en_a_i,
+    addr_a_i => addr_a_i,
+    data_a_i => data_a_i,
+    data_a_o => data_a_o,
     
     nand_ce_n => nand_ce_n,
     nand_cle => nand_cle,
@@ -177,6 +221,20 @@ begin
     nand_data => nand_data,
     nand_rb_n => nand_rb_n
 );
+
+    BRAM : true_dual_port_bram port map
+    (
+        clk_a_i => clk_a_i,
+        write_en_a_i => write_en_a_i,
+        addr_a_i => addr_a_i,
+        data_a_i => data_a_i,
+        data_a_o => data_a_o,
+        clk_b_i => clk_b_i,
+        write_en_b_i => write_en_b_i,
+        addr_b_i => addr_b_i,
+        data_b_i => data_b_i,
+        data_b_o => data_b_o
+    );
 
     slv_reg0 <= status_register;
 	ctrl_register <= slv_reg1;
