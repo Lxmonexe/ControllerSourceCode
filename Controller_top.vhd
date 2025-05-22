@@ -26,7 +26,6 @@ use work.onfi.all;
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
 --use IEEE.NUMERIC_STD.ALL;
-
 -- Uncomment the following library declaration if instantiating
 -- any Xilinx leaf cells in this code.
 --library UNISIM;
@@ -556,8 +555,8 @@ begin
                     if(read_cycle_count = 3) then
                         read_cycle_count <= 0;
                         delay_t <= WRITEWAIT;
-                        PreviousMstate <= Mstate;
-                        NextSstate <= LATCHCMD;
+                        PreviousMstate <= IDLE;
+                        NextSstate <= subIDLE;
                         Mstate <= SUBWAIT;
                     else
                         delay_t <= WRITEWAIT;
@@ -580,14 +579,14 @@ begin
                     address_cycle_count <= 0;
                     delay_t <= ADDRWAIT;
                     PreviousMstate <= Mstate;
-                    NextSstate <= WRITEDATA;
+                    NextSstate <= READDATA;
                     Mstate <= SUBWAIT;
                 elsif(Sstate = READDATA) then                   
                     if(read_cycle_count = 3) then
                         read_cycle_count <= 0;
-                        delay_t <= WRITEWAIT;
-                        PreviousMstate <= Mstate;
-                        NextSstate <= LATCHCMD;
+                        delay_t <= READWAIT;
+                        PreviousMstate <= IDLE;
+                        NextSstate <= subIDLE;
                         Mstate <= SUBWAIT;
                     else
                         delay_t <= WRITEWAIT;
