@@ -144,6 +144,8 @@ Port (
     clk : in std_logic;
     cmd_register: in std_logic_vector(31 downto 0);
     ctrl_register: in std_logic_vector(31 downto 0);
+    addr_register: in std_logic_vector(31 downto 0);
+    addr_bis_register: in std_logic_vector(31 downto 0);
     status_register: out std_logic_vector(31 downto 0);
     
     clk_a_o      : out  std_logic;
@@ -166,6 +168,8 @@ end component;
 	signal cmd_register:  std_logic_vector(31 downto 0);
     signal ctrl_register:  std_logic_vector(31 downto 0);
     signal status_register: std_logic_vector(31 downto 0);
+    signal addr_register:  std_logic_vector(31 downto 0);
+    signal addr_bis_register:  std_logic_vector(31 downto 0);
 	
 	
 	component true_dual_port_bram is
@@ -210,6 +214,8 @@ begin
     clk => clk,
     cmd_register => cmd_register,
     ctrl_register => ctrl_register,
+    addr_register => addr_register,
+    addr_bis_register => addr_bis_register,
     status_register => status_register,
     
     clk_a_o => clk_a_i,
