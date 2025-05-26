@@ -138,7 +138,7 @@ architecture arch_imp of Axi_top_slave_lite_v1_0_S00_AXI is
 	 --State machine variables
 	signal state_read : std_logic_vector(1 downto 0);
 	signal state_write: std_logic_vector(1 downto 0); 
-	
+	 
 	component Controller_top is
 Port ( 
     clk : in std_logic;
@@ -146,11 +146,11 @@ Port (
     ctrl_register: in std_logic_vector(31 downto 0);
     status_register: out std_logic_vector(31 downto 0);
     
-    clk_a_i      : in  std_logic;
-    write_en_a_i : in  std_logic;
-    addr_a_i     : in  std_logic_vector(15 downto 0);
-    data_a_i     : in  std_logic_vector(7 downto 0);
-    data_a_o     : out std_logic_vector(7 downto 0);
+    clk_a_o      : out  std_logic;
+    write_en_a_o : out  std_logic;
+    addr_a_o     : out  std_logic_vector(15 downto 0);
+    data_a_o     : out  std_logic_vector(7 downto 0);
+    data_a_i     : in std_logic_vector(7 downto 0);
     
     nand_ce_n : out std_logic;
     nand_cle : out std_logic;
@@ -191,6 +191,12 @@ end component;
         );
     end component;
     
+    signal clk_a_i      :   std_logic;
+    signal write_en_a_i :   std_logic;
+    signal addr_a_i     :   std_logic_vector(15 downto 0);
+    signal data_a_i     :   std_logic_vector(7 downto 0);
+    signal data_a_o     :  std_logic_vector(7 downto 0);
+    
     signal clk_b_i      :   std_logic;
     signal write_en_b_i :   std_logic;
     signal addr_b_i     :   std_logic_vector(10 downto 0);
@@ -206,11 +212,11 @@ begin
     ctrl_register => ctrl_register,
     status_register => status_register,
     
-    clk_a_i => clk_a_i,
-    write_en_a_i => write_en_a_i,
-    addr_a_i => addr_a_i,
-    data_a_i => data_a_i,
-    data_a_o => data_a_o,
+    clk_a_o => clk_a_i,
+    write_en_a_o => write_en_a_i,
+    addr_a_o => addr_a_i,
+    data_a_o => data_a_i,
+    data_a_i => data_a_o,
     
     nand_ce_n => nand_ce_n,
     nand_cle => nand_cle,

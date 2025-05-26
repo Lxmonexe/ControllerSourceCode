@@ -38,11 +38,11 @@ Port (
     ctrl_register: in std_logic_vector(31 downto 0);
     status_register: out std_logic_vector(31 downto 0);
     
-    clk_a_i      : in  std_logic;
-    write_en_a_i : in  std_logic;
-    addr_a_i     : in  std_logic_vector(15 downto 0);
-    data_a_i     : in  std_logic_vector(7 downto 0);
-    data_a_o     : out std_logic_vector(7 downto 0);
+    clk_a_o      : out  std_logic;
+    write_en_a_o : out  std_logic;
+    addr_a_o     : out  std_logic_vector(15 downto 0);
+    data_a_o     : out  std_logic_vector(7 downto 0);
+    data_a_i     : in std_logic_vector(7 downto 0);
     
     nand_ce_n : out std_logic;
     nand_cle : out std_logic;
@@ -186,6 +186,9 @@ signal r_busy :  std_logic;
 ----- Numeric NAND Flash signal -----
 signal ready_busy : std_logic;
 
+----- BRAM control signal ------
+signal BRAM_enable : std_logic;
+
 
 begin
 
@@ -277,6 +280,7 @@ controller_ready <= '0' when (Mstate /= IDLE) else '1';
 status_register(0) <= controller_ready;
 status_register(13) <= done;
 
+BRAM_enable <= '1' when (wait_counter = 1 and (re_n = '0' xor w_we_n = '0')) else '0';
 
 MASTER_FSM : process(clk, ctrl_register)
 begin
@@ -415,7 +419,6 @@ begin
             when PAGEPROGRAM =>
                 cmd_in <= x"80";
                 addr_in <= x"00";
-                w_data_in <= x"AA";
                 if(Sstate = LATCHCMD) then
                     if(counter = 1) then
                         counter <= 0;
@@ -545,7 +548,6 @@ begin
             when SETFEATURES =>
                 cmd_in <= x"EF";
                 addr_in <= x"FA";
-                --w_data_in <= x"AA";
                 if(Sstate = LATCHCMD) then
                     delay_t <= CMDWAIT;
                     PreviousMstate <= Mstate;
@@ -575,7 +577,6 @@ begin
             when GETFEATURES =>
                 cmd_in <= x"EE";
                 addr_in <= x"FA";
-                --w_data_in <= x"AA";
                 if(Sstate = LATCHCMD) then
                     delay_t <= CMDWAIT;
                     PreviousMstate <= Mstate;
@@ -728,6 +729,18 @@ begin
     end case;
 end process;
 
-
+BRAM_process: process(clk, BRAM_enable, Sstate, data_a_i)
+begin
+    if(BRAM_enable = '1') then
+        if(Sstate = READDATA) then
+            write_en_a_o  <= '1';
+        else 
+            write_en_a_o  <= '0';
+        end if;
+        clk_a_o <= clk;
+        data_a_o <= r_data_out;
+        w_data_in <= data_a_i; 
+    end if;
+end process;
 
 end Behavioral;
