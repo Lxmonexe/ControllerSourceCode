@@ -150,7 +150,7 @@ Port (
     
     clk_a_o      : out  std_logic;
     write_en_a_o : out  std_logic;
-    addr_a_o     : out  std_logic_vector(15 downto 0);
+    addr_a_o     : out  std_logic_vector(16 downto 0);
     data_a_o     : out  std_logic_vector(7 downto 0);
     data_a_i     : in std_logic_vector(7 downto 0);
     
@@ -175,7 +175,7 @@ end component;
 	component true_dual_port_bram is
     generic (
         WIDTH_PORT_A : natural := 8;
-        DEPTH_PORT_A : natural := 32768; -- 2 pages buffer
+        DEPTH_PORT_A : natural := 65536; -- 3 pages buffer and one reserved for parameter
         ADDR_WIDTH_A : natural := ilogup(DEPTH_PORT_A);
         WIDTH_PORT_B : natural := 32;
         DEPTH_PORT_B : natural := DEPTH_PORT_A * WIDTH_PORT_A / WIDTH_PORT_B;
@@ -197,13 +197,13 @@ end component;
     
     signal clk_a_i      :   std_logic;
     signal write_en_a_i :   std_logic;
-    signal addr_a_i     :   std_logic_vector(15 downto 0);
+    signal addr_a_i     :   std_logic_vector(16 downto 0);
     signal data_a_i     :   std_logic_vector(7 downto 0);
     signal data_a_o     :  std_logic_vector(7 downto 0);
     
     signal clk_b_i      :   std_logic;
     signal write_en_b_i :   std_logic;
-    signal addr_b_i     :   std_logic_vector(10 downto 0);
+    signal addr_b_i     :   std_logic_vector(14 downto 0);
     signal data_b_i     :   std_logic_vector(31 downto 0);
     signal data_b_o     :  std_logic_vector(31 downto 0);
 

@@ -42,7 +42,7 @@ Port (
     
     clk_a_o      : out  std_logic;
     write_en_a_o : out  std_logic;
-    addr_a_o     : out  std_logic_vector(15 downto 0);
+    addr_a_o     : out  std_logic_vector(16 downto 0);
     data_a_o     : out  std_logic_vector(7 downto 0);
     data_a_i     : in std_logic_vector(7 downto 0);
     
