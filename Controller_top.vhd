@@ -42,7 +42,7 @@ Port (
     
     clk_a_o      : out  std_logic;
     write_en_a_o : out  std_logic;
-    addr_a_o     : out  std_logic_vector(15 downto 0);
+    addr_a_o     : out  std_logic_vector(15 downto 0) := "0000000000000000";
     data_a_o     : out  std_logic_vector(7 downto 0);
     data_a_i     : in std_logic_vector(7 downto 0);
     
@@ -707,6 +707,7 @@ begin
             status_register(6) <= '0';
             status_register(7) <= '0';
             status_register(8) <= '0';
+            status_register(28 downto 14) <= (others => '0');
         when RESET =>
             status_register(1) <= '1';          
         when READID =>
@@ -732,32 +733,17 @@ begin
     end case;
     case Sstate is
         when SUBIDLE =>
-            status_register(8) <= '0';
-            status_register(9) <= '0';
-            status_register(10) <= '0';
-            status_register(11) <= '0';
+            status_register(12 downto 9) <= (others => '0');
         when LATCHCMD =>
-            status_register(8) <= '1';
-            status_register(9) <= '0';
-            status_register(10) <= '0';
-            status_register(11) <= '0';
+            status_register(12 downto 9) <= "0001";
         when LATCHADDR =>
-            status_register(8) <= '0';
-            status_register(9) <= '1';
-            status_register(10) <= '0';
-            status_register(11) <= '0';
+            status_register(12 downto 9) <= "0010";
         when READDATA =>
-            status_register(8) <= '0';
-            status_register(9) <= '0';
-            status_register(10) <= '1';
-            status_register(11) <= '0';
+            status_register(12 downto 9) <= "0100";
         when WRITEDATA => 
-            status_register(8) <= '0';
-            status_register(9) <= '0';
-            status_register(10) <= '0';
-            status_register(11) <= '1';
+            status_register(12 downto 9) <= "1000";
         when others =>
-            status_register(15) <= '1';
+            status_register(31) <= '1';
     end case;
     if(addr_register(15) /= '0' or addr_bis_register(7) /= '0') then
         status_register(29) <= '1';
