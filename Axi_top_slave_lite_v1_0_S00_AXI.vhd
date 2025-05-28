@@ -150,7 +150,7 @@ Port (
     
     clk_a_o      : out  std_logic;
     write_en_a_o : out  std_logic;
-    addr_a_o     : out  std_logic_vector(16 downto 0);
+    addr_a_o     : out  std_logic_vector(15 downto 0);
     data_a_o     : out  std_logic_vector(7 downto 0);
     data_a_i     : in std_logic_vector(7 downto 0);
     
@@ -197,13 +197,13 @@ end component;
     
     signal clk_a_i      :   std_logic;
     signal write_en_a_i :   std_logic;
-    signal addr_a_i     :   std_logic_vector(16 downto 0);
+    signal addr_a_i     :   std_logic_vector(15 downto 0);
     signal data_a_i     :   std_logic_vector(7 downto 0);
     signal data_a_o     :  std_logic_vector(7 downto 0);
     
     signal clk_b_i      :   std_logic;
     signal write_en_b_i :   std_logic;
-    signal addr_b_i     :   std_logic_vector(14 downto 0);
+    signal addr_b_i     :   std_logic_vector(13 downto 0);
     signal data_b_i     :   std_logic_vector(31 downto 0);
     signal data_b_o     :  std_logic_vector(31 downto 0);
 
