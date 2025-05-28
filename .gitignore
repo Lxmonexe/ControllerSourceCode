@@ -2,3 +2,11 @@
 nand_model/
 
 .venv/
+
+.pytest_cache/
+
+testbench/__pycache__/
+
+transcript
+
+sim_build/
