@@ -5,6 +5,8 @@ nand_model/
 
 .pytest_cache/
 
+.vscode/
+
 testbench/__pycache__/
 
 transcript
