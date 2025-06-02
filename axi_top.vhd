@@ -2,7 +2,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity Axi_top is
+entity axi_top is
 	generic (
 		-- Users to add parameters here
 
@@ -17,7 +17,7 @@ entity Axi_top is
 	port (
 		-- Users to add ports here
 		clk : in std_logic;
-		
+		rst : in std_logic;
         --nand_ce_n : out std_logic;
         --nand_cle : out std_logic;
         --nand_ale : out std_logic;
@@ -53,9 +53,9 @@ entity Axi_top is
 		s00_axi_rvalid	: out std_logic;
 		s00_axi_rready	: in std_logic
 	);
-end Axi_top;
+end axi_top;
 
-architecture arch_imp of Axi_top is
+architecture arch_imp of axi_top is
 
 	-- component declaration
 	component Axi_top_slave_lite_v1_0_S00_AXI is
