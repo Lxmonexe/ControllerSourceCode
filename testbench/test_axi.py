@@ -3,49 +3,64 @@ from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge, Timer
 from cocotbext.axi import AxiLiteMaster, AxiLiteBus
 
-async def clk_gen(dut, period1_ns=30):  
+async def clk_gen(dut,clk, period1_ns=30, period2_ns=20):  
     """ Clock generator """
     cocotb.start_soon(Clock(dut.clk, period1_ns, units="ns").start())
-    
+    cocotb.start_soon(Clock(clk, period2_ns, units="ns").start())
 
 @cocotb.test()
 async def run_test(dut):
     """ Run the testbench """
     
-    await clk_gen(dut)   
-    axi_master = AxiLiteMaster(AxiLiteBus.from_prefix(dut, "s00_axi"), dut.clk, dut.rst)
+    clk = dut.s00_axi_aclk
+    rst = dut.s00_axi_aresetn
+    controller_ready = None
+    await clk_gen(dut, clk)   
+    axi_master = AxiLiteMaster(AxiLiteBus.from_prefix(dut, "s00_axi"), clk, rst,reset_active_level=False)
    
 
-    await Timer(10010, units="ns")  # Wait for power up to complete
+    
+    
+    rst.value = 0
+    for _ in range(5):
+        await RisingEdge(clk)
+    rst.value = 1
+    await RisingEdge(clk)
+
+    await Timer(11000, units="ns")  # Wait for the controller to be ready
+
 
     # Reset the controller
-    await axi_master.write(0x2, b'1')  
-    print("reset command sent")
-
-    await axi_master.write(0x1, b'1')
-    print("start reset command")
+    await axi_master.write(0x8, (1).to_bytes(4, 'little'))  
+    await axi_master.write(0x4, (1).to_bytes(4, 'little'))
+    
+    
     
     while True:
-        controller_ready = await axi_master.read(0x0,b'32')
-        if( controller_ready % 2 == 0):
+        resp = await axi_master.read(0x0, 4)
+        data = int.from_bytes(resp.data, byteorder="little")
+        if data & (1 << 0):  # Vérifie si le bit 0 est à 1
             print("reset done")
+            await axi_master.write(0x4, (0).to_bytes(4, 'little'))
             break
-    
-    await axi_master.write(0x1, b'0')
+        await Timer(100, units="ns")  # Petite pause pour éviter de surcharger la simulation
+
+    await Timer(5000, units="ns")
 
     # READ ID command
-    await axi_master.write(0x2, b'2')
-
-    # Start the controller
-    await axi_master.write(0x1, b'1')
+    await axi_master.write(0x8, (2).to_bytes(4, 'little'))
+    await Timer(30, units="ns")
+    await axi_master.write(0x4, (1).to_bytes(4, 'little'))
 
     while True:
-        controller_ready = await axi_master.read(0x0,b'32')
-        if( controller_ready & 0b1000000000001 != 0):
-            print("controller ready and command done")
+        resp = await axi_master.read(0x0, 4)
+        data = int.from_bytes(resp.data, byteorder="little")
+        if (data & (1 << 0)) and (data & (1 << 13)):  # Vérifie bit 0 et bit 13
+            print("command done")
+            await axi_master.write(0x4, (0).to_bytes(4, 'little')) 
             break
+        await Timer(100, units="ns")
 
-    # Stop the controller
-    await axi_master.write(0x1, b'0') 
+        
 
-    await Timer(100, units="ns")  # Wait for the controller to stop
+    await Timer(5000, units="ns")  # Wait for the controller to stop
