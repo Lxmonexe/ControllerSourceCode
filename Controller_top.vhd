@@ -38,7 +38,7 @@ Port (
     ctrl_register: in std_logic_vector(31 downto 0);
     addr_register: in std_logic_vector(31 downto 0);
     addr_bis_register: in std_logic_vector(31 downto 0);
-    status_register: out std_logic_vector(31 downto 0);
+    status_register: out std_logic_vector(31 downto 0) := "00000000000000000000000000000000" ;
     
     clk_a_o      : out  std_logic;
     write_en_a_o : out  std_logic;
