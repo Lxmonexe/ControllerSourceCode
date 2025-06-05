@@ -3,7 +3,7 @@ from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge, Timer
 from cocotbext.axi import AxiLiteMaster, AxiLiteBus
 
-async def clk_gen(dut,clk, period1_ns=30, period2_ns=20):  
+async def clk_gen(dut,clk, period1_ns=30, period2_ns=10):  
     """ Clock generator """
     cocotb.start_soon(Clock(dut.clk, period1_ns, units="ns").start())
     cocotb.start_soon(Clock(clk, period2_ns, units="ns").start())
@@ -62,5 +62,16 @@ async def run_test(dut):
         await Timer(100, units="ns")
 
         
+    await axi_master.write(0x14, (55).to_bytes(4, 'little'))
+    await axi_master.write(0x14, (4645).to_bytes(4, 'little'))
+   
+    
 
+    await axi_master.write(0x18, (786).to_bytes(4, 'little'))
+    await axi_master.write(0x18, (5415).to_bytes(4, 'little'))
+    await axi_master.write(0x18, (786).to_bytes(4, 'little'))
+    await axi_master.write(0x18, (5415).to_bytes(4, 'little'))
+
+    await axi_master.write(0x8, (0).to_bytes(4, 'little'))
+    
     await Timer(5000, units="ns")  # Wait for the controller to stop
