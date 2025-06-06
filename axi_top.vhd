@@ -12,7 +12,7 @@ entity axi_top is
 
 		-- Parameters of Axi Slave Bus Interface S00_AXI
 		C_S00_AXI_DATA_WIDTH	: integer	:= 32;
-		C_S00_AXI_ADDR_WIDTH	: integer	:= 6
+		C_S00_AXI_ADDR_WIDTH	: integer	:= 18
 	);
 	port (
 		-- Users to add ports here
@@ -61,7 +61,7 @@ architecture arch_imp of axi_top is
 	component Axi_top_slave_lite_v1_0_S00_AXI is
 		generic (
 		C_S_AXI_DATA_WIDTH	: integer	:= 32;
-		C_S_AXI_ADDR_WIDTH	: integer	:= 6
+		C_S_AXI_ADDR_WIDTH	: integer	:= 18
 		);
 		port (
 		S_AXI_ACLK	: in std_logic;

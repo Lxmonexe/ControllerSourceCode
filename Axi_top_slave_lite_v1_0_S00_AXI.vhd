@@ -14,7 +14,7 @@ entity Axi_top_slave_lite_v1_0_S00_AXI is
 		-- Width of S_AXI data bus
 		C_S_AXI_DATA_WIDTH	: integer	:= 32;
 		-- Width of S_AXI address bus
-		C_S_AXI_ADDR_WIDTH	: integer	:= 6
+		C_S_AXI_ADDR_WIDTH	: integer	:= 18
 	);
 	port (
 		-- Users to add ports here
@@ -115,7 +115,7 @@ architecture arch_imp of Axi_top_slave_lite_v1_0_S00_AXI is
 	-- ADDR_LSB = 2 for 32 bits (n downto 2)
 	-- ADDR_LSB = 3 for 64 bits (n downto 3)
 	constant ADDR_LSB  : integer := (C_S_AXI_DATA_WIDTH/32)+ 1;
-	constant OPT_MEM_ADDR_BITS : integer := 3;
+	constant OPT_MEM_ADDR_BITS : integer := 15;
 	------------------------------------------------
 	---- Signals for user logic register space example
 	--------------------------------------------------
@@ -128,7 +128,6 @@ architecture arch_imp of Axi_top_slave_lite_v1_0_S00_AXI is
 	signal byte_index	: integer;
 
 	 signal mem_logic  : std_logic_vector(ADDR_LSB + OPT_MEM_ADDR_BITS downto ADDR_LSB);
-     signal previous_mem_logic : std_logic_vector(ADDR_LSB + OPT_MEM_ADDR_BITS downto ADDR_LSB);
 	 --State machine local parameters
 	constant Idle : std_logic_vector(1 downto 0) := "00";
 	constant Raddr: std_logic_vector(1 downto 0) := "10";
@@ -198,25 +197,17 @@ end component;
     signal clk_a_i      :   std_logic;
     signal write_en_a_i :   std_logic;
     signal addr_a_i     :   std_logic_vector(15 downto 0);
-    signal data_a_i     :   std_logic_vector(7 downto 0);
+    signal data_a_i    :   std_logic_vector(7 downto 0);
     signal data_a_o     :  std_logic_vector(7 downto 0);
     
-    signal clk_b_i      :   std_logic;
-    signal write_en_b_i :   std_logic;
-    signal addr_b_i     :   std_logic_vector(13 downto 0);
-    signal data_b_i     :   std_logic_vector(31 downto 0);
-    signal data_b_o     :  std_logic_vector(31 downto 0);
     
-    signal addr_index : integer := 0;
-    signal addr_offset : integer := 0;
+    signal write_en_b_s :   std_logic;
+    signal write_en_late_one :   std_logic;
+    signal addr_b_s     :  std_logic_vector(13 downto 0);
+    signal data_b_in_s     :  std_logic_vector(31 downto 0);
+    signal data_b_out_s    :  std_logic_vector(31 downto 0);
     
-  
-    signal enable_bram_clock : std_logic := '0';
-    signal enable_bram_process : std_logic := '0';
-    signal latch_done : std_logic := '0';
-    signal latch_counter : integer := 0;
-    signal clk_bram_counter : integer := 0;
-
+   
 begin
 
     Controller : Controller_top port map
@@ -251,19 +242,29 @@ begin
         addr_a_i => addr_a_i,
         data_a_i => data_a_i,
         data_a_o => data_a_o,
-        clk_b_i => clk_b_i,
-        write_en_b_i => write_en_b_i,
-        addr_b_i => addr_b_i,
-        data_b_i => data_b_i,
-        data_b_o => data_b_o
+        clk_b_i => S_AXI_ACLK,
+        write_en_b_i => write_en_late_one,
+        addr_b_i => addr_b_s,
+        data_b_i => S_AXI_WDATA,
+        data_b_o => data_b_out_s
     );
 
     slv_reg0 <= status_register;
 	ctrl_register <= slv_reg1;
 	cmd_register <= slv_reg2;
 	
-	            
-	            
+	write_en_b_s <= '1' when ( S_AXI_WREADY = '1' and  S_AXI_WVALID = '1' and  S_AXI_AWADDR(17 downto 16) = "11") else '0';
+	
+	process(S_AXI_ACLK)
+	   begin
+	       if falling_edge(S_AXI_ACLK) then
+	         write_en_late_one <= write_en_b_s;  
+	       end if;
+	end process;
+	
+	
+	addr_b_s <= S_AXI_AWADDR(15 downto 2) when ((S_AXI_AWADDR(16) = '1' or S_AXI_ARADDR(16) = '1') and (write_en_b_s = '1' or write_en_late_one = '1')) else
+	            S_AXI_ARADDR(15 downto 2);            
 	-- I/O Connections assignments
 
 	S_AXI_AWREADY	<= axi_awready;
@@ -356,9 +357,7 @@ begin
 	    else
 	      if (S_AXI_WVALID = '1') then
 	          case (mem_logic) is
-	          when b"0000" =>
-	            write_en_b_i <= '0';
-	            enable_bram_process <= '0';
+	          when b"0000000000000000" =>
 	            for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
 	             -- if ( S_AXI_WSTRB(byte_index) = '1' ) then
 	                -- Respective byte enables are asserted as per write strobes                   
@@ -366,9 +365,7 @@ begin
 	                --slv_reg0(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
 	              --end if;
 	            end loop;
-	          when b"0001" =>
-	            write_en_b_i <= '0';
-	            enable_bram_process <= '0';
+	          when b"0000000000000001" =>
 	            for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
 	              if ( S_AXI_WSTRB(byte_index) = '1' ) then
 	                -- Respective byte enables are asserted as per write strobes                   
@@ -376,9 +373,7 @@ begin
 	                slv_reg1(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
 	              end if;
 	            end loop;
-	          when b"0010" =>
-	            write_en_b_i <= '0';
-	            enable_bram_process <= '0';
+	          when b"0000000000000010" =>
 	            for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
 	              if ( S_AXI_WSTRB(byte_index) = '1' ) then
 	                -- Respective byte enables are asserted as per write strobes                   
@@ -386,9 +381,7 @@ begin
 	                slv_reg2(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
 	              end if;
 	            end loop;
-	          when b"0011" =>
-	            write_en_b_i <= '0';
-	            enable_bram_process <= '0';
+	          when b"0000000000000011" =>
 	            for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
 	              if ( S_AXI_WSTRB(byte_index) = '1' ) then
 	                -- Respective byte enables are asserted as per write strobes                   
@@ -396,36 +389,14 @@ begin
 	                slv_reg3(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
 	              end if;
 	            end loop;
-	          when b"0100" =>
-	            write_en_b_i <= '0';
-	            enable_bram_process <= '0';
+	          when b"0000000000000100" =>
 	            for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
 	              if ( S_AXI_WSTRB(byte_index) = '1' ) then
 	                -- Respective byte enables are asserted as per write strobes                   
 	                -- slave registor 4
 	                slv_reg4(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
 	              end if;
-	            end loop;
-	          when b"0101" =>
-	            write_en_b_i <= '1';
-	            data_b_i <= S_AXI_WDATA(31 downto 0);
-	            enable_bram_process <= '1';
-	            addr_index <= 0;
-	          when b"0110" =>
-	            write_en_b_i <= '1';
-	            data_b_i <= S_AXI_WDATA(31 downto 0);
-	            enable_bram_process <= '1';
-	            addr_index <= 4096;
-	          when b"0111" =>
-	            write_en_b_i <= '1';
-	            data_b_i <= S_AXI_WDATA(31 downto 0);
-	            enable_bram_process <= '1';
-	            addr_index <= 8192;
-	          when b"1000" =>
-	            write_en_b_i <= '1';
-	            data_b_i <= S_AXI_WDATA(31 downto 0);
-	            enable_bram_process <= '1';
-	            addr_index <= 12288;  
+	            end loop; 
 	          when others =>
 	            --slv_reg0 <= slv_reg0;
 	            slv_reg1 <= slv_reg1;
@@ -481,94 +452,16 @@ begin
 	       end if;                                                   
 	  end process;                                          
 	-- Implement memory mapped register select and read logic generation
-	 S_AXI_RDATA <= slv_reg0 when (axi_araddr(ADDR_LSB+OPT_MEM_ADDR_BITS downto ADDR_LSB) = "0000" ) else 
-	 slv_reg1 when (axi_araddr(ADDR_LSB+OPT_MEM_ADDR_BITS downto ADDR_LSB) = "0001" ) else 
-	 slv_reg2 when (axi_araddr(ADDR_LSB+OPT_MEM_ADDR_BITS downto ADDR_LSB) = "0010" ) else 
-	 slv_reg3 when (axi_araddr(ADDR_LSB+OPT_MEM_ADDR_BITS downto ADDR_LSB) = "0011" ) else 
-	 slv_reg4 when (axi_araddr(ADDR_LSB+OPT_MEM_ADDR_BITS downto ADDR_LSB) = "0100" ) else 
+	 S_AXI_RDATA <= slv_reg0 when (axi_araddr(ADDR_LSB+OPT_MEM_ADDR_BITS downto ADDR_LSB) = "0000000000000000" ) else 
+	 slv_reg1 when (axi_araddr(ADDR_LSB+OPT_MEM_ADDR_BITS downto ADDR_LSB) = "0000000000000001" ) else 
+	 slv_reg2 when (axi_araddr(ADDR_LSB+OPT_MEM_ADDR_BITS downto ADDR_LSB) = "0000000000000010" ) else 
+	 slv_reg3 when (axi_araddr(ADDR_LSB+OPT_MEM_ADDR_BITS downto ADDR_LSB) = "0000000000000011" ) else 
+	 slv_reg4 when (axi_araddr(ADDR_LSB+OPT_MEM_ADDR_BITS downto ADDR_LSB) = "0000000000000100" ) else
+	 data_b_out_s when (axi_araddr(17 downto 16) = "11") else 
 	 (others => '0');
 
 	-- Add user logic here
-    process (S_AXI_ACLK, mem_logic)
-        begin
-            if (rising_edge(S_AXI_ACLK) and enable_bram_process = '1') then
-                if(previous_mem_logic = mem_logic or addr_offset = 0) then
-                    case mem_logic is
-                        when b"0101" =>                          
-                            if(latch_counter = 2) then
-                               latch_counter <= 0;
-                               addr_offset <= addr_offset + 1;
-                               enable_bram_clock <= '0';  
-                            else
-                                enable_bram_clock <= '1';
-                                previous_mem_logic <= mem_logic;
-                                latch_counter <= latch_counter + 1;
-                            end if;
-                        when b"0110" =>
-                            if(latch_counter = 2) then
-                               latch_counter <= 0;
-                               addr_offset <= addr_offset + 1;
-                               enable_bram_clock <= '0';
-                            else
-                                enable_bram_clock <= '1';
-                                previous_mem_logic <= mem_logic;
-                                latch_counter <= latch_counter + 1;
-                            end if;
-                        when b"0111" =>
-                            if(latch_counter = 2) then
-                               latch_counter <= 0;
-                               addr_offset <= addr_offset + 1;
-                               enable_bram_clock <= '0';  
-                            else
-                                enable_bram_clock <= '1';
-                                previous_mem_logic <= mem_logic;
-                                latch_counter <= latch_counter + 1;
-                            end if;
-                        when b"1000" =>
-                            if(latch_counter = 2) then
-                               latch_counter <= 0;
-                               addr_offset <= addr_offset + 1;
-                               enable_bram_clock <= '0'; 
-                            else
-                                enable_bram_clock <= '1';
-                                previous_mem_logic <= mem_logic;
-                                latch_counter <= latch_counter + 1;
-                            end if;
-                       
-                        -- should not happen
-                        when others =>
-                            enable_bram_clock <= '0';
-                            addr_offset <= 0;
-                    end case;
-                    
-                    -- cannot write more than one page on a page
-                    if(addr_offset = 16384) then
-                        addr_offset <= 0;
-                    end if;
-                  
-                else
-                    enable_bram_clock <= '0';
-                    addr_offset <= 0;
-                    latch_counter <= 0;
-                end if;
-            end if;           
-    end process;
     
-    process(S_AXI_ACLK, enable_bram_clock)
-        begin
-            if(rising_edge(S_AXI_ACLK) and enable_bram_clock = '1') then
-                if(clk_bram_counter = 0) then
-                    clk_bram_counter <= 2;
-                else
-                    clk_bram_counter <= clk_bram_counter - 1;
-                end if;
-            elsif (enable_bram_clock = '0') then
-                    clk_bram_counter <= 0;
-            end if;
-    end process;
-    
-    addr_b_i <= std_logic_vector(TO_UNSIGNED(addr_index + addr_offset, 14));
-    clk_b_i <= '1' when (enable_bram_clock = '1' and clk_bram_counter = 0) else '0';
 	-- User logic ends
 
 end arch_imp;
