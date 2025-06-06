@@ -280,7 +280,7 @@ controller_ready <= '0' when (Mstate /= IDLE) else '1';
 
 
 status_register(0) <= controller_ready;
-status_register(13) <= done;
+status_register(1) <= done;
 
 BRAM_enable <= '1' when (wait_counter = 1 and (re_n = '0' xor w_we_n = '0')) else '0';
 
@@ -699,33 +699,25 @@ Status_process : process(Mstate, Sstate)
 begin
     case Mstate is 
         when IDLE =>
-            status_register(1) <= '0';
-            status_register(2) <= '0';
-            status_register(3) <= '0';
-            status_register(4) <= '0';
-            status_register(5) <= '0';
-            status_register(6) <= '0';
-            status_register(7) <= '0';
-            status_register(8) <= '0';
-            status_register(28 downto 14) <= (others => '0');
+            status_register(28 downto 2) <= (others => '0');
         when RESET =>
-            status_register(1) <= '1';          
+            status_register(2) <= '1';          
         when READID =>
-            status_register(2) <= '1'; 
+            status_register(3) <= '1'; 
         when READPARAM =>
-            status_register(3) <= '1';  
+            status_register(4) <= '1';  
         when READSTATUS => 
-            status_register(4) <= '1';    
-        when PAGEPROGRAM =>
             status_register(5) <= '1';    
-        when READ =>
+        when PAGEPROGRAM =>
             status_register(6) <= '1';    
+        when READ =>
+            status_register(7) <= '1';    
         when ERASE =>
-            status_register(7) <= '1';
+            status_register(8) <= '1';
         when SETFEATURES =>
-            status_register(8) <= '1';
+            status_register(9) <= '1';
         when GETFEATURES =>
-            status_register(8) <= '1';
+            status_register(9) <= '1';
         when SUBWAIT =>
             
         when others =>
@@ -733,15 +725,15 @@ begin
     end case;
     case Sstate is
         when SUBIDLE =>
-            status_register(12 downto 9) <= (others => '0');
+            status_register(13 downto 10) <= (others => '0');
         when LATCHCMD =>
-            status_register(12 downto 9) <= "0001";
+            status_register(13 downto 10) <= "0001";
         when LATCHADDR =>
-            status_register(12 downto 9) <= "0010";
+            status_register(13 downto 10) <= "0010";
         when READDATA =>
-            status_register(12 downto 9) <= "0100";
+            status_register(13 downto 10) <= "0100";
         when WRITEDATA => 
-            status_register(12 downto 9) <= "1000";
+            status_register(13 downto 10) <= "1000";
         when others =>
             status_register(31) <= '1';
     end case;
@@ -752,7 +744,7 @@ begin
     end if;
 end process;
 
-BRAM_process: process(clk, BRAM_enable, Sstate, data_a_i)
+BRAM_process: process(clk, BRAM_enable,Mstate, Sstate, data_a_i)
 begin
     if(BRAM_enable = '1') then
         if(Sstate = READDATA) then
@@ -763,6 +755,9 @@ begin
         clk_a_o <= clk;
         data_a_o <= r_data_out;
         w_data_in <= data_a_i; 
+    elsif( Mstate = IDLE) then
+        clk_a_o <= '0';
+        write_en_a_o  <= '0';
     end if;
 end process;
 
