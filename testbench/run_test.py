@@ -6,6 +6,7 @@ os.environ["WAVES"] = "1"
 os.environ["SIM"] = "questa"
 os.environ["TOPLEVEL_LANG"] = "vhdl"
 
+
 vhdl_src=[
           "../log_pkg.vhd", 
           "../onfi_package.vhd",
@@ -15,7 +16,7 @@ vhdl_src=[
           "../read_data.vhd",
           "../write_data.vhd",
           "../Controller_top.vhd",
-          "../true_dual_port_bram.vhd",
+          "../../../../sim_1/new/true_dual_port_bram_sim.vhd",
           "../Axi_top_slave_lite_v1_0_S00_AXI.vhd",
           "../axi_top.vhd"
           ]

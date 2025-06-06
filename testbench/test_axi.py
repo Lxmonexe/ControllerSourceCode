@@ -31,47 +31,58 @@ async def run_test(dut):
 
 
     # Reset the controller
-    await axi_master.write(0x8, (1).to_bytes(4, 'little'))  
-    await axi_master.write(0x4, (1).to_bytes(4, 'little'))
+    await axi_master.write(0x00008, (1).to_bytes(4, 'little'))  
+    await axi_master.write(0x00004, (1).to_bytes(4, 'little'))
     
     
     
     while True:
-        resp = await axi_master.read(0x0, 4)
+        resp = await axi_master.read(0x00000, 4)
         data = int.from_bytes(resp.data, byteorder="little")
         if data & (1 << 0):  # Vérifie si le bit 0 est à 1
             print("reset done")
-            await axi_master.write(0x4, (0).to_bytes(4, 'little'))
+            await axi_master.write(0x00004, (0).to_bytes(4, 'little'))
             break
         await Timer(100, units="ns")  # Petite pause pour éviter de surcharger la simulation
 
     await Timer(5000, units="ns")
 
     # READ ID command
-    await axi_master.write(0x8, (2).to_bytes(4, 'little'))
+    await axi_master.write(0x00008, (2).to_bytes(4, 'little'))
     await Timer(30, units="ns")
     await axi_master.write(0x4, (1).to_bytes(4, 'little'))
 
     while True:
-        resp = await axi_master.read(0x0, 4)
+        resp = await axi_master.read(0x00000, 4)
         data = int.from_bytes(resp.data, byteorder="little")
-        if (data & (1 << 0)) and (data & (1 << 13)):  # Vérifie bit 0 et bit 13
+        if (data & (1 << 0)) and (data & (1 << 1)):  # Vérifie bit 0 et bit 13
+            
+            await axi_master.write(0x00004, (0).to_bytes(4, 'little')) 
             print("command done")
-            await axi_master.write(0x4, (0).to_bytes(4, 'little')) 
             break
         await Timer(100, units="ns")
 
         
-    await axi_master.write(0x14, (55).to_bytes(4, 'little'))
-    await axi_master.write(0x14, (4645).to_bytes(4, 'little'))
-   
+    await axi_master.write(0x30000, (10).to_bytes(4, 'little'))
+    await axi_master.write(0x30000, (10).to_bytes(4, 'little'))
+    await axi_master.write(0x30000, (10).to_bytes(4, 'little'))
+    await axi_master.write(0x30000, (10).to_bytes(4, 'little'))
+    await axi_master.write(0x30004, (160).to_bytes(4, 'little'))
+    await axi_master.write(0x30000, (10).to_bytes(4, 'little'))
+    await axi_master.write(0x30004, (160).to_bytes(4, 'little'))
+    await axi_master.write(0x30000, (10).to_bytes(4, 'little'))
+    await axi_master.write(0x30004, (160).to_bytes(4, 'little'))
+    await axi_master.write(0x30008, (1212).to_bytes(4, 'little'))
+    await axi_master.write(0x3000C, (54655).to_bytes(4, 'little'))
+    await axi_master.write(0x30010, (515).to_bytes(4, 'little'))
+    await axi_master.write(0x30014, (789).to_bytes(4, 'little'))
+
+    await Timer(100, units="ns")
+
+    await axi_master.read(0x30000, 4)
+    await axi_master.read(0x30010, 4)
+    
     
 
-    await axi_master.write(0x18, (786).to_bytes(4, 'little'))
-    await axi_master.write(0x18, (5415).to_bytes(4, 'little'))
-    await axi_master.write(0x18, (786).to_bytes(4, 'little'))
-    await axi_master.write(0x18, (5415).to_bytes(4, 'little'))
-
-    await axi_master.write(0x8, (0).to_bytes(4, 'little'))
     
     await Timer(5000, units="ns")  # Wait for the controller to stop
