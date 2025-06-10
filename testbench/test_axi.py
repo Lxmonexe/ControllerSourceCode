@@ -48,7 +48,7 @@ async def run_test(dut):
     await Timer(5000, units="ns")
 
     # READ ID command
-    await axi_master.write(0x00008, (2).to_bytes(4, 'little'))
+    await axi_master.write(0x00008, (3074).to_bytes(4, 'little'))
     await Timer(30, units="ns")
     await axi_master.write(0x4, (1).to_bytes(4, 'little'))
 
@@ -63,26 +63,70 @@ async def run_test(dut):
         await Timer(100, units="ns")
 
         
-    await axi_master.write(0x30000, (10).to_bytes(4, 'little'))
-    await axi_master.write(0x30000, (10).to_bytes(4, 'little'))
-    await axi_master.write(0x30000, (10).to_bytes(4, 'little'))
-    await axi_master.write(0x30000, (10).to_bytes(4, 'little'))
-    await axi_master.write(0x30004, (160).to_bytes(4, 'little'))
-    await axi_master.write(0x30000, (10).to_bytes(4, 'little'))
-    await axi_master.write(0x30004, (160).to_bytes(4, 'little'))
-    await axi_master.write(0x30000, (10).to_bytes(4, 'little'))
-    await axi_master.write(0x30004, (160).to_bytes(4, 'little'))
-    await axi_master.write(0x30008, (1212).to_bytes(4, 'little'))
-    await axi_master.write(0x3000C, (54655).to_bytes(4, 'little'))
-    await axi_master.write(0x30010, (515).to_bytes(4, 'little'))
-    await axi_master.write(0x30014, (789).to_bytes(4, 'little'))
+    for i in range(4096):
+        addr = 0x30000 + i * 4
+        await axi_master.write(addr, (134480385).to_bytes(4, 'little'))
+       
+    for i in range(2048):
+            addr = 0x34000 + i * 4
+            await axi_master.write(addr, (2863311530).to_bytes(4, 'little'))
+
 
     await Timer(100, units="ns")
 
-    await axi_master.read(0x30000, 4)
-    await axi_master.read(0x30010, 4)
+    # WRITE command
+    await axi_master.write(0x00008, (65568).to_bytes(4, 'little'))  
     
-    
+    #command address
+    await axi_master.write(0x0000C, (1).to_bytes(4, 'little'))
+    await axi_master.write(0x00010, (1).to_bytes(4, 'little'))  
+
+    await axi_master.write(0x00004, (1).to_bytes(4, 'little'))  # Start the command
 
     
+    while True:
+        resp = await axi_master.read(0x00000, 4)
+        data = int.from_bytes(resp.data, byteorder="little")
+        if (data & (1 << 0)) and (data & (1 << 1)):
+            await axi_master.write(0x00004, (0).to_bytes(4, 'little'))
+            print("command done")
+            break
+        await Timer(5000, units="ns")
+
+    
+    # WRITE command
+    await axi_master.write(0x00008, (33824).to_bytes(4, 'little'))  
+    
+    #command address
+    await axi_master.write(0x0000C, (1).to_bytes(4, 'little'))
+    await axi_master.write(0x00010, (2).to_bytes(4, 'little'))  
+
+    await axi_master.write(0x00004, (1).to_bytes(4, 'little'))  # Start the command
+
+    
+    while True:
+        resp = await axi_master.read(0x00000, 4)
+        data = int.from_bytes(resp.data, byteorder="little")
+        if (data & (1 << 0)) and (data & (1 << 1)):
+            await axi_master.write(0x00004, (0).to_bytes(4, 'little'))
+            print("command done")
+            break
+        await Timer(5000, units="ns")
+    
+
+    #read command
+    await axi_master.write(0x00008, (35856).to_bytes(4, 'little')) 
+    await axi_master.write(0x00004, (1).to_bytes(4, 'little'))
+    
+    while True:
+        resp = await axi_master.read(0x00000, 4)
+        data = int.from_bytes(resp.data, byteorder="little")
+        if (data & (1 << 0)) and (data & (1 << 1)):
+            await axi_master.write(0x00004, (0).to_bytes(4, 'little'))
+            print("command done")
+            break
+        await Timer(50000, units="ns")
+
+    
+
     await Timer(5000, units="ns")  # Wait for the controller to stop
