@@ -252,6 +252,8 @@ begin
     slv_reg0 <= status_register;
 	ctrl_register <= slv_reg1;
 	cmd_register <= slv_reg2;
+	addr_register <= slv_reg3;
+	addr_bis_register <= slv_reg4;
 	
 	write_en_b_s <= '1' when ( S_AXI_WREADY = '1' and  S_AXI_WVALID = '1' and  S_AXI_AWADDR(17 downto 16) = "11") else '0';
 	
