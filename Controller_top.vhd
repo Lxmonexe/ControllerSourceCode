@@ -25,7 +25,7 @@ use work.onfi.all;
 
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
---use IEEE.NUMERIC_STD.ALL;
+use IEEE.NUMERIC_STD.ALL;
 -- Uncomment the following library declaration if instantiating
 -- any Xilinx leaf cells in this code.
 --library UNISIM;
@@ -147,6 +147,7 @@ signal PreviousMstate : master_states := IDLE;
 signal NextSstate : substates := subIDLE;
 signal delay_t : delay_type := CMDWAIT;
 signal counter : integer := 0;
+signal ready_counter : integer := 0;
 signal address_cycle_count : integer := 0;
 signal read_cycle_count : integer := 0; -- use to also count write cycle
 signal wait_counter : integer := 0;
@@ -190,7 +191,8 @@ signal ready_busy : std_logic;
 
 ----- BRAM control signal ------
 signal BRAM_enable : std_logic;
-
+signal addr_offset : integer := 0;
+signal addr_index : integer := 0;
 
 begin
 
@@ -374,6 +376,8 @@ begin
                         Mstate <= SUBWAIT;
                         read_cycle_count <= read_cycle_count + 1;
                     end if;
+                    
+                    
                 end if;
                 
             when READPARAM =>
@@ -390,9 +394,9 @@ begin
                     NextSstate <= READDATA;
                     Mstate <= SUBWAIT;
                 elsif(Sstate = READDATA) then
-                    if(ready_busy = '1' and counter = 1) then
+                    if(ready_busy = '1' and ready_counter = 1) then
                         if(read_cycle_count = 255) then
-                            counter <= 0;
+                            ready_counter <= 0;
                             read_cycle_count <= 0;
                             delay_t <= READWAIT;
                             PreviousMstate <= IDLE;
@@ -405,8 +409,8 @@ begin
                             Mstate <= SUBWAIT;
                             read_cycle_count <= read_cycle_count + 1;
                         end if;
-                    elsif(ready_busy /= '1' and counter = 0) then
-                        counter <= 1;
+                    elsif(ready_busy /= '1' and ready_counter = 0) then
+                        ready_counter <= 1;
                     end if;
                 end if;
                 
@@ -418,10 +422,15 @@ begin
                     NextSstate <= READDATA;
                     Mstate <= SUBWAIT;
                 elsif(Sstate = READDATA) then
-                    delay_t <= READWAIT;
-                    PreviousMstate <= IDLE;
-                    NextSstate <= subIDLE;
-                    Mstate <= SUBWAIT;
+                    if(ready_busy = '1' and ready_counter = 1) then
+                        ready_counter <= 0;
+                        delay_t <= READWAIT;
+                        PreviousMstate <= IDLE;
+                        NextSstate <= subIDLE;
+                        Mstate <= SUBWAIT;
+                    elsif(ready_busy /= '1' and ready_counter = 0) then
+                        ready_counter <= 1;
+                    end if;
                 end if;
                 
             when PAGEPROGRAM =>
@@ -443,23 +452,24 @@ begin
                         counter <= 1;
                     end if;
                 elsif(Sstate = LATCHADDR) then 
+                    if(address_cycle_count = 0) then
+                        addr_in <= addr_register(7 downto 0);
+                    elsif(address_cycle_count = 1) then
+                        addr_in <= addr_register(15 downto 8);
+                    elsif(address_cycle_count = 2) then
+                        addr_in <= addr_register (23 downto 16);
+                    elsif(address_cycle_count = 3) then
+                       addr_in <= addr_register(31 downto 24);
+                    elsif(address_cycle_count = 4) then
+                        addr_in <= addr_bis_register(7 downto 0);
+                    end if;
                     if(address_cycle_count = 4) then
-                            addr_in <= addr_bis_register(7 downto 0);
                             address_cycle_count <= 0;
                             delay_t <= ADDRWAIT;
                             PreviousMstate <= Mstate;
                             NextSstate <= WRITEDATA;
                             Mstate <= SUBWAIT;
-                        else
-                            if(address_cycle_count = 0) then
-                                addr_in <= addr_register(7 downto 0);
-                            elsif(address_cycle_count = 1) then
-                                addr_in <= addr_register(15 downto 8);
-                            elsif(address_cycle_count = 2) then
-                                addr_in <= addr_register (23 downto 16);
-                            elsif(address_cycle_count = 3) then
-                                addr_in <= addr_register(31 downto 24);
-                            end if;
+                        else        
                             delay_t <= ADDRWAIT;
                             PreviousMstate <= Mstate;
                             NextSstate <= Sstate;
@@ -467,7 +477,7 @@ begin
                             address_cycle_count <= address_cycle_count + 1;
                         end if;
                 elsif(Sstate = WRITEDATA) then                   
-                    if(read_cycle_count = 1048) then
+                    if(read_cycle_count = 2048 * TO_INTEGER(unsigned(cmd_register(18 downto 15)))) then
                         read_cycle_count <= 0;
                         delay_t <= WRITEWAIT;
                         PreviousMstate <= Mstate;
@@ -500,24 +510,25 @@ begin
                         Mstate <= SUBWAIT;
                         counter <= 1;
                     end if;
-                elsif(Sstate = LATCHADDR) then 
-                    if(address_cycle_count = 4) then
+                elsif(Sstate = LATCHADDR) then
+                    if(address_cycle_count = 0) then
+                        addr_in <= addr_register(7 downto 0);
+                    elsif(address_cycle_count = 1) then
+                        addr_in <= addr_register(15 downto 8);
+                    elsif(address_cycle_count = 2) then
+                        addr_in <= addr_register (23 downto 16);
+                    elsif(address_cycle_count = 3) then
+                       addr_in <= addr_register(31 downto 24);
+                    elsif(address_cycle_count = 4) then
                         addr_in <= addr_bis_register(7 downto 0);
+                    end if; 
+                    if(address_cycle_count = 4) then
                         address_cycle_count <= 0;
                         delay_t <= ADDRWAIT;
                         PreviousMstate <= Mstate;
                         NextSstate <= LATCHCMD;
                         Mstate <= SUBWAIT;
                     else
-                        if(address_cycle_count = 0) then
-                           addr_in <= addr_register(7 downto 0);
-                        elsif(address_cycle_count = 1) then
-                           addr_in <= addr_register(15 downto 8);
-                        elsif(address_cycle_count = 2) then
-                            addr_in <= addr_register (23 downto 16);
-                        elsif(address_cycle_count = 3) then
-                            addr_in <= addr_register(31 downto 24);
-                        end if;
                         delay_t <= ADDRWAIT;
                         PreviousMstate <= Mstate;
                         NextSstate <= Sstate;
@@ -525,24 +536,29 @@ begin
                         address_cycle_count <= address_cycle_count + 1;
                     end if;
                 elsif(Sstate = READDATA) then
-                    if(read_cycle_count = 1048) then
-                        read_cycle_count <= 0;
-                        delay_t <= READWAIT;
-                        PreviousMstate <= IDLE;
-                        NextSstate <= subIDLE;
-                        Mstate <= SUBWAIT;
-                    else
-                        delay_t <= READWAIT;
-                        PreviousMstate <= Mstate;
-                        NextSstate <= Sstate;
-                        Mstate <= SUBWAIT;
-                        read_cycle_count <= read_cycle_count + 1;
+                    if(ready_busy /= '0' and ready_counter = 1) then
+                        if(read_cycle_count = 2048 * TO_INTEGER(unsigned(cmd_register(18 downto 15)))) then
+                            ready_counter <= 0;
+                            read_cycle_count <= 0;
+                            delay_t <= READWAIT;
+                            PreviousMstate <= IDLE;
+                            NextSstate <= subIDLE;
+                            Mstate <= SUBWAIT;
+                        else
+                            delay_t <= READWAIT;
+                            PreviousMstate <= Mstate;
+                            NextSstate <= Sstate;
+                            Mstate <= SUBWAIT;
+                            read_cycle_count <= read_cycle_count + 1;
+                        end if;
+                    elsif(ready_busy = '0' and ready_counter = 0) then
+                        ready_counter <= 1;
                     end if;
                 end if;
                 
             when ERASE =>
                 cmd_in <= x"60";
-                addr_in <= x"00";
+                addr_in <= addr_register(7 downto 0);
                 if(Sstate = LATCHCMD) then
                     if(counter = 1) then
                         counter <= 0;
@@ -747,6 +763,7 @@ end process;
 BRAM_process: process(clk, BRAM_enable,Mstate, Sstate, data_a_i)
 begin
     if(BRAM_enable = '1') then
+        
         if(Sstate = READDATA) then
             write_en_a_o  <= '1';
         else 
@@ -754,11 +771,29 @@ begin
         end if;
         clk_a_o <= clk;
         data_a_o <= r_data_out;
-        w_data_in <= data_a_i; 
+        w_data_in <= data_a_i;
+        
     elsif( Mstate = IDLE) then
+        addr_offset <= 0;
         clk_a_o <= '0';
         write_en_a_o  <= '0';
     end if;
+    if rising_edge(BRAM_enable) then
+        addr_a_o <= std_logic_vector(to_unsigned(addr_index + addr_offset, addr_a_o'length));
+        addr_offset <= addr_offset + 1; 
+    end if;
+    case cmd_register(11 downto 10) is 
+        when "00" =>
+            addr_index <= 0;
+        when "01" => 
+            addr_index <= 16384;
+        when "10" =>
+            addr_index <= 32768;
+        when "11" =>
+            addr_index <= 49152;
+        when others =>
+            addr_index <= 0;
+    end case;
 end process;
 
 end Behavioral;
