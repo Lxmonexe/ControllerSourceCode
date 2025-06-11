@@ -278,7 +278,7 @@ start_write <= '1' when (Sstate = WRITEDATA) else '0';
 start_read <= '1' when (Sstate = READDATA) else '0';
 
 
-controller_ready <= '0' when (Mstate /= IDLE) else '1';
+controller_ready <= '0' when (Mstate /= IDLE or ready_busy = '0') else '1';
 
 
 status_register(0) <= controller_ready;
