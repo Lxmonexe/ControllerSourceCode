@@ -339,15 +339,10 @@ begin
                 
             when RESET =>
                 cmd_in <= x"FF";
-                if(counter = 0) then
-                    counter <= 1;       -- wait one clk cycle to load cmd in data
-                else
-                    counter <= 0;
-                    Mstate <= SUBWAIT;
-                    delay_t <= CMDWAIT;
-                    PreviousMstate <= IDLE;
-                    NextSstate <= subIDLE;
-                end if; 
+                Mstate <= SUBWAIT;
+                delay_t <= CMDWAIT;
+                PreviousMstate <= IDLE;
+                NextSstate <= subIDLE;
                 
             when READID =>
                 cmd_in <= x"90";
@@ -394,7 +389,7 @@ begin
                     NextSstate <= READDATA;
                     Mstate <= SUBWAIT;
                 elsif(Sstate = READDATA) then
-                    if(ready_busy = '1' and ready_counter = 1) then
+                    if(ready_busy /= '0' and ready_counter = 1) then
                         if(read_cycle_count = 255) then
                             ready_counter <= 0;
                             read_cycle_count <= 0;
@@ -409,7 +404,7 @@ begin
                             Mstate <= SUBWAIT;
                             read_cycle_count <= read_cycle_count + 1;
                         end if;
-                    elsif(ready_busy /= '1' and ready_counter = 0) then
+                    elsif(ready_busy = '0' and ready_counter = 0) then
                         ready_counter <= 1;
                     end if;
                 end if;
@@ -422,13 +417,13 @@ begin
                     NextSstate <= READDATA;
                     Mstate <= SUBWAIT;
                 elsif(Sstate = READDATA) then
-                    if(ready_busy = '1' and ready_counter = 1) then
+                    if(ready_busy /= '0' and ready_counter = 1) then
                         ready_counter <= 0;
                         delay_t <= READWAIT;
                         PreviousMstate <= IDLE;
                         NextSstate <= subIDLE;
                         Mstate <= SUBWAIT;
-                    elsif(ready_busy /= '1' and ready_counter = 0) then
+                    elsif(ready_busy = '0' and ready_counter = 0) then
                         ready_counter <= 1;
                     end if;
                 end if;
@@ -689,17 +684,16 @@ begin
                         wait_counter <= 1;
                     end if;
                 elsif(delay_t = WRITEDONE) then
-                    if(cmd_busy = '0' and wait_counter = 1) then   
-                        Sstate <= subIDLE;
-                        if(counter = t_prog) then
-                            counter <= 0;
+                    if(cmd_busy = '0' and wait_counter = 1) then 
+                        if(ready_busy /= '0' and ready_counter = 1) then
+                            ready_counter <= 0;
                             wait_counter <= 0;
                             wait_done <= '1';
                             Mstate <= PreviousMstate;
                             Sstate <= NextSstate;
-                        else
-                            counter <= counter + 1;
-                        end if;
+                        elsif(ready_busy = '0' and ready_counter = 0) then
+                            ready_counter <= 1;
+                        end if;  
                     elsif(cmd_busy = '1' and wait_counter = 0) then
                         wait_counter <= 1;
                     end if;
