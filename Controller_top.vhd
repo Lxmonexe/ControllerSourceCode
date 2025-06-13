@@ -288,8 +288,21 @@ BRAM_enable <= '1' when (wait_counter = 1 and (re_n = '0' xor w_we_n = '0')) els
 
 MASTER_FSM : process(clk, ctrl_register)
 begin
-    if(ctrl_register(0) = '0' and done = '1') then
+    if(ctrl_register(2) = '1') then
+        Mstate <= IDLE;
+        Sstate <= subIDLE;
+        delay_t <= CMDWAIT;
+        
+        counter <= 0;
+        wait_counter <= 0;
         done <= '0';
+        read_cycle_count <= 0;
+        address_cycle_count <= 0;
+        ready_counter <= 0;
+        
+    elsif(ctrl_register(0) = '0' and done = '1') then
+        done <= '0';
+    
     elsif(rising_edge(clk) and ctrl_register(0) = '1' and done = '0') then
         case Mstate is 
         
@@ -370,9 +383,7 @@ begin
                         NextSstate <= Sstate;
                         Mstate <= SUBWAIT;
                         read_cycle_count <= read_cycle_count + 1;
-                    end if;
-                    
-                    
+                    end if;  
                 end if;
                 
             when READPARAM =>
@@ -431,11 +442,12 @@ begin
             when PAGEPROGRAM =>
                 cmd_in <= x"80";
                 if(Sstate = LATCHCMD) then
-                    if(counter = 1) then
+                    if(counter = 1) then 
+                        ready_counter <= 0;
                         counter <= 0;
                         cmd_in <= x"10";
-                        delay_t <= WRITEDONE;
-                        PreviousMstate <= IDLE;
+                        delay_t <= CMDWAIT;
+                        PreviousMstate <= SUBWAIT;
                         NextSstate <= subIDLE;
                         Mstate <= SUBWAIT;
                     elsif(counter = 0) then
@@ -650,9 +662,15 @@ begin
                 if(delay_t = CMDWAIT) then
                     if(cmd_busy = '0' and wait_counter = 1) then
                         wait_counter <= 0;
-                        wait_done <= '1';
+                        
                         Mstate <= PreviousMstate;
                         Sstate <= NextSstate;
+                        if(PreviousMstate = SUBWAIT) then
+                            delay_t <= WRITEDONE;
+                            wait_done <= '0';
+                        else 
+                            wait_done <= '1';
+                        end if;
                     elsif(cmd_busy = '1' and wait_counter = 0) then
                         wait_counter <= 1;
                     end if;
@@ -684,19 +702,15 @@ begin
                         wait_counter <= 1;
                     end if;
                 elsif(delay_t = WRITEDONE) then
-                    if(cmd_busy = '0' and wait_counter = 1) then 
                         if(ready_busy /= '0' and ready_counter = 1) then
                             ready_counter <= 0;
                             wait_counter <= 0;
                             wait_done <= '1';
-                            Mstate <= PreviousMstate;
-                            Sstate <= NextSstate;
+                            Mstate <= IDLE;
+                            Sstate <= subIDLE;
                         elsif(ready_busy = '0' and ready_counter = 0) then
                             ready_counter <= 1;
-                        end if;  
-                    elsif(cmd_busy = '1' and wait_counter = 0) then
-                        wait_counter <= 1;
-                    end if;
+                        end if;
                 end if;
                 
             when others =>
