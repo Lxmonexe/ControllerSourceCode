@@ -732,10 +732,10 @@ begin
             status_register(4) <= '1';  
         when READSTATUS => 
             status_register(5) <= '1';    
-        when PAGEPROGRAM =>
-            status_register(6) <= '1';    
         when READ =>
-            status_register(7) <= '1';    
+            status_register(6) <= '1';
+        when PAGEPROGRAM =>
+            status_register(7) <= '1';
         when ERASE =>
             status_register(8) <= '1';
         when SETFEATURES =>
