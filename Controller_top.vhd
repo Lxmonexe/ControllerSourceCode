@@ -286,11 +286,11 @@ status_register(1) <= done;
 
 BRAM_enable <= '1' when (wait_counter = 1 and (re_n = '0' xor w_we_n = '0')) else '0';
 
-MASTER_FSM : process(clk, ctrl_register)
+MASTER_FSM : process(clk, ctrl_register, done)
 begin
-    if(ctrl_register(2) = '1') then
-        Mstate <= IDLE;
-        Sstate <= subIDLE;
+    if(ctrl_register(1) = '1') then
+        Mstate <= RESET;
+        Sstate <= LATCHCMD;
         delay_t <= CMDWAIT;
         
         counter <= 0;
