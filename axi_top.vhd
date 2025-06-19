@@ -16,7 +16,7 @@ entity axi_top is
 	);
 	port (
 		-- Users to add ports here
-		--clk : in std_logic;
+		clk_controller_i : in std_logic;
 		--rst : in std_logic;
         --nand_ce_n : out std_logic;
         --nand_cle : out std_logic;
@@ -86,7 +86,7 @@ architecture arch_imp of axi_top is
 		S_AXI_RVALID	: out std_logic;
 		S_AXI_RREADY	: in std_logic;
 		
-		clk : in std_logic;
+		clk_controller_i : in std_logic;
 		
 		nand_ce_n : out std_logic;
         nand_cle : out std_logic;
@@ -151,7 +151,7 @@ Axi_top_slave_lite_v1_0_S00_AXI_inst : Axi_top_slave_lite_v1_0_S00_AXI
 		S_AXI_RRESP	=> s00_axi_rresp,
 		S_AXI_RVALID	=> s00_axi_rvalid,
 		S_AXI_RREADY	=> s00_axi_rready,
-		clk => clk_s,
+		clk_controller_i => clk_controller_i,
 		nand_ce_n => nand_ce_n,
         nand_cle => nand_cle,
         nand_ale => nand_ale,
