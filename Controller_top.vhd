@@ -63,47 +63,47 @@ architecture Behavioral of Controller_top is
 
 component latch_command is
 Port (
-    clk : in std_logic;
-    start_cmd : in std_logic; 
-    cle : out std_logic;
-    cmd_we_n : out std_logic;
-    cmd_in : in std_logic_vector(7 downto 0);
-    cmd_out : out std_logic_vector(7 downto 0);
-    cmd_busy: out std_logic
+    clk_i : in std_logic;
+    start_cmd_i : in std_logic; 
+    cle_o : out std_logic;
+    cmd_we_n_o : out std_logic;
+    cmd_in_i : in std_logic_vector(7 downto 0);
+    cmd_out_o : out std_logic_vector(7 downto 0);
+    cmd_busy_o: out std_logic
 );
 end component;
 
 component latch_address is
 Port (
-    clk : in std_logic;
-    start_addr : in std_logic;
-    ale : out std_logic;
-    addr_we_n : out std_logic;
-    addr_in : in std_logic_vector(7 downto 0);
-    addr_out : out std_logic_vector(7 downto 0);
-    addr_busy : out std_logic
+    clk_i : in std_logic;
+    start_addr_i : in std_logic;
+    ale_o : out std_logic;
+    addr_we_n_o : out std_logic;
+    addr_in_i : in std_logic_vector(7 downto 0);
+    addr_out_o : out std_logic_vector(7 downto 0);
+    addr_busy_o : out std_logic
  );
 end component;
 
 component write_data is
 Port ( 
-    clk : in std_logic;
-    start_write : in std_logic;
-    w_we_n : out std_logic; 
-    w_data_in : in std_logic_vector(7 downto 0);
-    w_data_out : out std_logic_vector(7 downto 0);
-    w_busy : out std_logic
+    clk_i : in std_logic;
+    start_write_i : in std_logic;
+    w_we_n_o : out std_logic; 
+    w_data_in_i : in std_logic_vector(7 downto 0);
+    w_data_out_o : out std_logic_vector(7 downto 0);
+    w_busy_o : out std_logic
 );
 end component;
 
 component read_data is
 Port ( 
-    clk : in std_logic;
-    start_read : in std_logic;
-    re_n : out std_logic;
-    r_data_out : in std_logic_vector (7 downto 0);
-    r_data_in : out std_logic_vector (7 downto 0);
-    r_busy : out std_logic
+    clk_i : in std_logic;
+    start_read_i : in std_logic;
+    re_n_o : out std_logic;
+    r_data_out_i : in std_logic_vector (7 downto 0);
+    r_data_in_o : out std_logic_vector (7 downto 0);
+    r_busy_o : out std_logic
 );
 end component;
 
@@ -118,24 +118,24 @@ Port (
     nand_data : inout std_logic_vector(7 downto 0);
     nand_rb_n : in std_logic;
     
-    cle : in std_logic;
-    cmd_we_n : in std_logic;
-    cmd_out : in std_logic_vector (7 downto 0);
+    cle_i : in std_logic;
+    cmd_we_n_i : in std_logic;
+    cmd_out_i : in std_logic_vector (7 downto 0);
     
-    ale : in std_logic;
-    addr_we_n : in std_logic;
-    addr_out : in std_logic_vector (7 downto 0);
+    ale_i : in std_logic;
+    addr_we_n_i : in std_logic;
+    addr_out_i : in std_logic_vector (7 downto 0);
     
-    w_we_n : in std_logic;
-    w_data_out : in std_logic_vector (7 downto 0);
+    w_we_n_i : in std_logic;
+    w_data_out_i : in std_logic_vector (7 downto 0);
     
-    re_n : in std_logic;
-    r_data_out : out std_logic_vector (7 downto 0);
+    re_n_i : in std_logic;
+    r_data_out_o : out std_logic_vector (7 downto 0);
     
-    ready_busy : out std_logic;
+    ready_busy_o : out std_logic;
     
-    Mstate : in master_states;
-    Sstate : in substates
+    Mstate_i : in master_states;
+    Sstate_i : in substates
 );
 end component;
 
@@ -156,38 +156,38 @@ signal wait_done : std_logic := '0';
 signal controller_ready : std_logic := '0';
 
 ----- Command control signal -----
-signal start_cmd : std_logic; 
-signal cle : std_logic;
-signal cmd_we_n :  std_logic;
-signal cmd_in :  std_logic_vector(7 downto 0);
-signal cmd_out :  std_logic_vector(7 downto 0);
-signal cmd_busy:  std_logic;
+signal start_cmd_s : std_logic; 
+signal cle_s : std_logic;
+signal cmd_we_n_s :  std_logic;
+signal cmd_in_s :  std_logic_vector(7 downto 0);
+signal cmd_out_s :  std_logic_vector(7 downto 0);
+signal cmd_busy_s:  std_logic;
 
 ----- Address control signal -----
-signal start_addr :  std_logic;
-signal ale :  std_logic;
-signal addr_we_n :  std_logic;
-signal addr_in :  std_logic_vector(7 downto 0);
-signal addr_out :  std_logic_vector(7 downto 0);
-signal addr_busy :  std_logic;
+signal start_addr_s :  std_logic;
+signal ale_s :  std_logic;
+signal addr_we_n_s :  std_logic;
+signal addr_in_s :  std_logic_vector(7 downto 0);
+signal addr_out_s :  std_logic_vector(7 downto 0);
+signal addr_busy_s :  std_logic;
 
 ----- Write data control signal -----
-signal start_write :  std_logic;
-signal w_we_n :  std_logic; 
-signal w_data_in :  std_logic_vector(7 downto 0);
-signal w_data_out :  std_logic_vector(7 downto 0);
-signal w_busy :  std_logic;
+signal start_write_s :  std_logic;
+signal w_we_n_s :  std_logic; 
+signal w_data_in_s :  std_logic_vector(7 downto 0);
+signal w_data_out_s :  std_logic_vector(7 downto 0);
+signal w_busy_s :  std_logic;
 
 ----- Read data control signal -----
-signal start_read :  std_logic;
-signal re_n :  std_logic;
-signal r_data_out :  std_logic_vector (7 downto 0);
-signal r_data_in :  std_logic_vector (7 downto 0);
-signal r_busy :  std_logic;
+signal start_read_s :  std_logic;
+signal re_n_s :  std_logic;
+signal r_data_out_s :  std_logic_vector (7 downto 0);
+signal r_data_in_s :  std_logic_vector (7 downto 0);
+signal r_busy_s :  std_logic;
 
 
 ----- Numeric NAND Flash signal -----
-signal ready_busy : std_logic;
+signal ready_busy_s : std_logic;
 
 ----- BRAM control signal ------
 signal BRAM_enable : std_logic;
@@ -200,44 +200,44 @@ begin
 
 CMD_FSM : latch_command port map
 (
-    clk => clk,
-    start_cmd => start_cmd,
-    cle => cle,
-    cmd_we_n => cmd_we_n,
-    cmd_in => cmd_in,
-    cmd_out => cmd_out,
-    cmd_busy => cmd_busy
+    clk_i => clk,
+    start_cmd_i => start_cmd_s,
+    cle_o => cle_s,
+    cmd_we_n_o => cmd_we_n_s,
+    cmd_in_i => cmd_in_s,
+    cmd_out_o => cmd_out_s,
+    cmd_busy_o => cmd_busy_s
 );
 
 ADDR_FSM : latch_address port map
 (
-    clk => clk,
-    start_addr => start_addr,
-    ale => ale,
-    addr_we_n => addr_we_n,
-    addr_in => addr_in,
-    addr_out => addr_out,
-    addr_busy => addr_busy
+    clk_i => clk,
+    start_addr_i => start_addr_s,
+    ale_o => ale_s,
+    addr_we_n_o => addr_we_n_s,
+    addr_in_i => addr_in_s,
+    addr_out_o => addr_out_s,
+    addr_busy_o => addr_busy_s
 );
 
 WRITE_FSM : write_data port map
 (
-    clk => clk,
-    start_write => start_write,
-    w_we_n => w_we_n,
-    w_data_in => w_data_in,
-    w_data_out => w_data_out,
-    w_busy => w_busy
+    clk_i => clk,
+    start_write_i => start_write_s,
+    w_we_n_o => w_we_n_s,
+    w_data_in_i => w_data_in_s,
+    w_data_out_o => w_data_out_s,
+    w_busy_o => w_busy_s
 );
 
 READ_FSM : read_data port map
 (
-    clk => clk,
-    start_read => start_read,
-    re_n => re_n,
-    r_data_out => r_data_out,
-    r_data_in => r_data_in,
-    r_busy => r_busy
+    clk_i => clk,
+    start_read_i => start_read_s,
+    re_n_o => re_n_s,
+    r_data_out_i => r_data_out_s,
+    r_data_in_o => r_data_in_s,
+    r_busy_o => r_busy_s
 );
 
 PHY_interface : PHY port map 
@@ -251,40 +251,40 @@ PHY_interface : PHY port map
     nand_data => nand_data,
     nand_rb_n => nand_rb_n,
     
-    cle => cle,
-    cmd_we_n => cmd_we_n,
-    cmd_out => cmd_out,
+    cle_i => cle_s,
+    cmd_we_n_i => cmd_we_n_s,
+    cmd_out_i => cmd_out_s,
     
-    ale => ale,
-    addr_we_n => addr_we_n,
-    addr_out => addr_out,
+    ale_i => ale_s,
+    addr_we_n_i => addr_we_n_s,
+    addr_out_i => addr_out_s,
     
-    w_we_n => w_we_n,
-    w_data_out => w_data_out,
+    w_we_n_i => w_we_n_s,
+    w_data_out_i => w_data_out_s,
     
-    re_n => re_n,
-    r_data_out => r_data_out,
+    re_n_i => re_n_s,
+    r_data_out_o => r_data_out_s,
     
-    ready_busy => ready_busy,
+    ready_busy_o => ready_busy_s,
     
-    Mstate => Mstate,
-    Sstate => Sstate
+    Mstate_i => Mstate,
+    Sstate_i => Sstate
 );
 
 
-start_cmd <= '1' when (Sstate = LATCHCMD) else '0';
-start_addr <= '1' when (Sstate = LATCHADDR) else '0';
-start_write <= '1' when (Sstate = WRITEDATA) else '0';
-start_read <= '1' when (Sstate = READDATA) else '0';
+start_cmd_s <= '1' when (Sstate = LATCHCMD) else '0';
+start_addr_s <= '1' when (Sstate = LATCHADDR) else '0';
+start_write_s <= '1' when (Sstate = WRITEDATA) else '0';
+start_read_s <= '1' when (Sstate = READDATA) else '0';
 
 
-controller_ready <= '0' when (Mstate /= IDLE or ready_busy = '0') else '1';
+controller_ready <= '0' when (Mstate /= IDLE or ready_busy_s = '0') else '1';
 
 
 status_register(0) <= controller_ready;
 status_register(1) <= done;
 
-BRAM_enable <= '1' when (wait_counter = 1 and (re_n = '0' xor w_we_n = '0')) else '0';
+BRAM_enable <= '1' when (wait_counter = 1 and (re_n_s = '0' xor w_we_n_s = '0')) else '0';
 
 MASTER_FSM : process(clk, ctrl_register, done)
 begin
@@ -351,15 +351,15 @@ begin
                 end if;
                 
             when RESET =>
-                cmd_in <= x"FF";
+                cmd_in_s <= x"FF";
                 Mstate <= SUBWAIT;
                 delay_t <= CMDWAIT;
                 PreviousMstate <= IDLE;
                 NextSstate <= subIDLE;
                 
             when READID =>
-                cmd_in <= x"90";
-                addr_in <= x"20";
+                cmd_in_s <= x"90";
+                addr_in_s <= x"20";
                 if(Sstate = LATCHCMD) then
                     delay_t <= CMDWAIT;
                     PreviousMstate <= Mstate;
@@ -387,8 +387,8 @@ begin
                 end if;
                 
             when READPARAM =>
-                cmd_in <= x"EC";
-                addr_in <= x"00";
+                cmd_in_s <= x"EC";
+                addr_in_s <= x"00";
                 if(Sstate = LATCHCMD) then
                     delay_t <= CMDWAIT;
                     PreviousMstate <= Mstate;
@@ -400,7 +400,7 @@ begin
                     NextSstate <= READDATA;
                     Mstate <= SUBWAIT;
                 elsif(Sstate = READDATA) then
-                    if(ready_busy /= '0' and ready_counter = 1) then
+                    if(ready_busy_s /= '0' and ready_counter = 1) then
                         if(read_cycle_count = 255) then
                             ready_counter <= 0;
                             read_cycle_count <= 0;
@@ -415,43 +415,43 @@ begin
                             Mstate <= SUBWAIT;
                             read_cycle_count <= read_cycle_count + 1;
                         end if;
-                    elsif(ready_busy = '0' and ready_counter = 0) then
+                    elsif(ready_busy_s = '0' and ready_counter = 0) then
                         ready_counter <= 1;
                     end if;
                 end if;
                 
             when READSTATUS => 
-                cmd_in <= x"70";
+                cmd_in_s <= x"70";
                 if(Sstate = LATCHCMD) then
                     delay_t <= CMDWAIT;
                     PreviousMstate <= Mstate;
                     NextSstate <= READDATA;
                     Mstate <= SUBWAIT;
                 elsif(Sstate = READDATA) then
-                    if(ready_busy /= '0' and ready_counter = 1) then
+                    if(ready_busy_s /= '0' and ready_counter = 1) then
                         ready_counter <= 0;
                         delay_t <= READWAIT;
                         PreviousMstate <= IDLE;
                         NextSstate <= subIDLE;
                         Mstate <= SUBWAIT;
-                    elsif(ready_busy = '0' and ready_counter = 0) then
+                    elsif(ready_busy_s = '0' and ready_counter = 0) then
                         ready_counter <= 1;
                     end if;
                 end if;
                 
             when PAGEPROGRAM =>
-                cmd_in <= x"80";
+                cmd_in_s <= x"80";
                 if(Sstate = LATCHCMD) then
                     if(counter = 1) then 
                         ready_counter <= 0;
                         counter <= 0;
-                        cmd_in <= x"10";
+                        cmd_in_s <= x"10";
                         delay_t <= CMDWAIT;
                         PreviousMstate <= SUBWAIT;
                         NextSstate <= subIDLE;
                         Mstate <= SUBWAIT;
                     elsif(counter = 0) then
-                        cmd_in <= x"80";
+                        cmd_in_s <= x"80";
                         delay_t <= CMDWAIT;
                         PreviousMstate <= Mstate;
                         NextSstate <= LATCHADDR;
@@ -460,15 +460,15 @@ begin
                     end if;
                 elsif(Sstate = LATCHADDR) then 
                     if(address_cycle_count = 0) then
-                        addr_in <= addr_register(7 downto 0);
+                        addr_in_s <= addr_register(7 downto 0);
                     elsif(address_cycle_count = 1) then
-                        addr_in <= addr_register(15 downto 8);
+                        addr_in_s <= addr_register(15 downto 8);
                     elsif(address_cycle_count = 2) then
-                        addr_in <= addr_register (23 downto 16);
+                        addr_in_s <= addr_register (23 downto 16);
                     elsif(address_cycle_count = 3) then
-                       addr_in <= addr_register(31 downto 24);
+                       addr_in_s <= addr_register(31 downto 24);
                     elsif(address_cycle_count = 4) then
-                        addr_in <= addr_bis_register(7 downto 0);
+                        addr_in_s <= addr_bis_register(7 downto 0);
                     end if;
                     if(address_cycle_count = 4) then
                             address_cycle_count <= 0;
@@ -500,17 +500,17 @@ begin
                 end if;
                 
             when READ =>
-                cmd_in <= x"00";
+                cmd_in_s <= x"00";
                 if(Sstate = LATCHCMD) then
                     if(counter = 1) then
                         counter <= 0;
-                        cmd_in <= x"30";
+                        cmd_in_s <= x"30";
                         delay_t <= CMDWAIT;
                         PreviousMstate <= Mstate;
                         NextSstate <= READDATA; 
                         Mstate <= SUBWAIT;
                     elsif(counter = 0) then
-                        cmd_in <= x"00";
+                        cmd_in_s <= x"00";
                         delay_t <= CMDWAIT;
                         PreviousMstate <= Mstate;
                         NextSstate <= LATCHADDR;
@@ -519,15 +519,15 @@ begin
                     end if;
                 elsif(Sstate = LATCHADDR) then
                     if(address_cycle_count = 0) then
-                        addr_in <= addr_register(7 downto 0);
+                        addr_in_s <= addr_register(7 downto 0);
                     elsif(address_cycle_count = 1) then
-                        addr_in <= addr_register(15 downto 8);
+                        addr_in_s <= addr_register(15 downto 8);
                     elsif(address_cycle_count = 2) then
-                        addr_in <= addr_register (23 downto 16);
+                        addr_in_s <= addr_register (23 downto 16);
                     elsif(address_cycle_count = 3) then
-                       addr_in <= addr_register(31 downto 24);
+                        addr_in_s <= addr_register(31 downto 24);
                     elsif(address_cycle_count = 4) then
-                        addr_in <= addr_bis_register(7 downto 0);
+                        addr_in_s <= addr_bis_register(7 downto 0);
                     end if; 
                     if(address_cycle_count = 4) then
                         address_cycle_count <= 0;
@@ -543,7 +543,7 @@ begin
                         address_cycle_count <= address_cycle_count + 1;
                     end if;
                 elsif(Sstate = READDATA) then
-                    if(ready_busy /= '0' and ready_counter = 1) then
+                    if(ready_busy_s /= '0' and ready_counter = 1) then
                         if(read_cycle_count = 2048 * TO_INTEGER(unsigned(cmd_register(18 downto 15)))) then
                             ready_counter <= 0;
                             read_cycle_count <= 0;
@@ -558,24 +558,24 @@ begin
                             Mstate <= SUBWAIT;
                             read_cycle_count <= read_cycle_count + 1;
                         end if;
-                    elsif(ready_busy = '0' and ready_counter = 0) then
+                    elsif(ready_busy_s = '0' and ready_counter = 0) then
                         ready_counter <= 1;
                     end if;
                 end if;
                 
             when ERASE =>
-                cmd_in <= x"60";
-                addr_in <= addr_register(7 downto 0);
+                cmd_in_s <= x"60";
+                addr_in_s <= addr_register(7 downto 0);
                 if(Sstate = LATCHCMD) then
                     if(counter = 1) then
                         counter <= 0;
-                        cmd_in <= x"D0";
+                        cmd_in_s <= x"D0";
                         delay_t <= CMDWAIT;
                         PreviousMstate <= IDLE;
                         NextSstate <= subIDLE; 
                         Mstate <= SUBWAIT;
                     elsif(counter = 0) then
-                        cmd_in <= x"60";
+                        cmd_in_s <= x"60";
                         delay_t <= CMDWAIT;
                         PreviousMstate <= Mstate;
                         NextSstate <= LATCHADDR;
@@ -599,8 +599,8 @@ begin
                 end if;
                 
             when SETFEATURES =>
-                cmd_in <= x"EF";
-                addr_in <= x"FA";
+                cmd_in_s <= x"EF";
+                addr_in_s <= x"FA";
                 if(Sstate = LATCHCMD) then
                     delay_t <= CMDWAIT;
                     PreviousMstate <= Mstate;
@@ -629,8 +629,8 @@ begin
                 end if;
                 
             when GETFEATURES =>
-                cmd_in <= x"EE";
-                addr_in <= x"FA";
+                cmd_in_s <= x"EE";
+                addr_in_s <= x"FA";
                 if(Sstate = LATCHCMD) then
                     delay_t <= CMDWAIT;
                     PreviousMstate <= Mstate;
@@ -660,7 +660,7 @@ begin
                 
             when SUBWAIT =>
                 if(delay_t = CMDWAIT) then
-                    if(cmd_busy = '0' and wait_counter = 1) then
+                    if(cmd_busy_s = '0' and wait_counter = 1) then
                         wait_counter <= 0;
                         
                         Mstate <= PreviousMstate;
@@ -671,44 +671,44 @@ begin
                         else 
                             wait_done <= '1';
                         end if;
-                    elsif(cmd_busy = '1' and wait_counter = 0) then
+                    elsif(cmd_busy_s = '1' and wait_counter = 0) then
                         wait_counter <= 1;
                     end if;
                 elsif(delay_t = ADDRWAIT) then
-                    if(addr_busy = '0' and wait_counter = 1) then
+                    if(addr_busy_s = '0' and wait_counter = 1) then
                         wait_counter <= 0;
                         wait_done <= '1';
                         Mstate <= PreviousMstate;
                         Sstate <= NextSstate;
-                    elsif(addr_busy = '1' and wait_counter = 0) then
+                    elsif(addr_busy_s = '1' and wait_counter = 0) then
                         wait_counter <= 1;
                     end if;
                 elsif(delay_t = WRITEWAIT) then
-                    if(w_busy = '0' and wait_counter = 1) then
+                    if(w_busy_s = '0' and wait_counter = 1) then
                         wait_counter <= 0;
                         wait_done <= '1';
                         Mstate <= PreviousMstate;
                         Sstate <= NextSstate;
-                    elsif(w_busy = '1' and wait_counter = 0) then
+                    elsif(w_busy_s = '1' and wait_counter = 0) then
                         wait_counter <= 1;
                     end if;
                 elsif(delay_t = READWAIT) then
-                    if(r_busy = '0' and wait_counter = 1) then
+                    if(r_busy_s = '0' and wait_counter = 1) then
                         wait_counter <= 0;
                         wait_done <= '1';
                         Mstate <= PreviousMstate;
                         Sstate <= NextSstate;
-                    elsif(r_busy = '1' and wait_counter = 0) then
+                    elsif(r_busy_s = '1' and wait_counter = 0) then
                         wait_counter <= 1;
                     end if;
                 elsif(delay_t = WRITEDONE) then
-                        if(ready_busy /= '0' and ready_counter = 1) then
+                        if(ready_busy_s /= '0' and ready_counter = 1) then
                             ready_counter <= 0;
                             wait_counter <= 0;
                             wait_done <= '1';
                             Mstate <= IDLE;
                             Sstate <= subIDLE;
-                        elsif(ready_busy = '0' and ready_counter = 0) then
+                        elsif(ready_busy_s = '0' and ready_counter = 0) then
                             ready_counter <= 1;
                         end if;
                 end if;
@@ -778,8 +778,8 @@ begin
             write_en_a_o  <= '0';
         end if;
         clk_a_o <= clk;
-        data_a_o <= r_data_out;
-        w_data_in <= data_a_i;
+        data_a_o <= r_data_out_s;
+        w_data_in_s <= data_a_i;
         
     elsif( Mstate = IDLE) then
         addr_offset <= 0;

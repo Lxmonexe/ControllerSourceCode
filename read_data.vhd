@@ -34,12 +34,12 @@ use work.onfi.all;
 
 entity read_data is
 Port ( 
-    clk : in std_logic;
-    start_read : in std_logic;
-    re_n : out std_logic;
-    r_data_out : in std_logic_vector (7 downto 0);
-    r_data_in : out std_logic_vector (7 downto 0);
-    r_busy : out std_logic
+    clk_i : in std_logic;
+    start_read_i : in std_logic;
+    re_n_o : out std_logic;
+    r_data_out_i : in std_logic_vector (7 downto 0);
+    r_data_in_o : out std_logic_vector (7 downto 0);
+    r_busy_o : out std_logic
 );
 end read_data;
 
@@ -52,16 +52,16 @@ signal counter : integer := 0;
 
 begin
 
-re_n <= '0' when (state = READ) else '1';
-r_data_in <= r_data_out when (state = READ or state = DONE) else "ZZZZZZZZ";
-r_busy <= '1' when (state /= IDLE) else '0';
+re_n_o <= '0' when (state = READ) else '1';
+r_data_in_o <= r_data_out_i when (state = READ or state = DONE) else "ZZZZZZZZ";
+r_busy_o <= '1' when (state /= IDLE) else '0';
 
-READ_FSM : process(clk, start_read)
+READ_FSM : process(clk_i, start_read_i)
 begin
-    if(rising_edge(clk)) then
+    if(rising_edge(clk_i)) then
         case state is
             when IDLE =>
-                if(start_read = '1') then
+                if(start_read_i = '1') then
                     state <= READ;
                 end if;
             when READ =>

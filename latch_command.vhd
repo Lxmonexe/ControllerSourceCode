@@ -34,13 +34,13 @@ use work.onfi.all;
 
 entity latch_command is
 Port (
-    clk : in std_logic;
-    start_cmd : in std_logic; 
-    cle : out std_logic;
-    cmd_we_n : out std_logic;
-    cmd_in : in std_logic_vector(7 downto 0);
-    cmd_out : out std_logic_vector(7 downto 0);
-    cmd_busy: out std_logic
+    clk_i : in std_logic;
+    start_cmd_i : in std_logic; 
+    cle_o : out std_logic;
+    cmd_we_n_o : out std_logic;
+    cmd_in_i : in std_logic_vector(7 downto 0);
+    cmd_out_o : out std_logic_vector(7 downto 0);
+    cmd_busy_o: out std_logic
 );
 end latch_command;
  
@@ -53,17 +53,17 @@ signal counter : integer := 0;
 
 begin
 
-cle <= '1' when (state = SET or state = SEND or state = DONE) else '0';
-cmd_we_n <= '0' when (state = SEND) else '1';
-cmd_out <= cmd_in when (state = SEND or state = DONE) else "ZZZZZZZZ";
-cmd_busy <= '1' when (state /= IDLE) else '0';
+cle_o <= '1' when (state = SET or state = SEND or state = DONE) else '0';
+cmd_we_n_o <= '0' when (state = SEND) else '1';
+cmd_out_o <= cmd_in_i when (state = SEND or state = DONE) else "ZZZZZZZZ";
+cmd_busy_o <= '1' when (state /= IDLE) else '0';
 
-CMD_FSM : process(clk, start_cmd)
+CMD_FSM : process(clk_i, start_cmd_i)
 begin
-    if(rising_edge(clk)) then
+    if(rising_edge(clk_i)) then
         case state is 
             when IDLE => 
-                if(start_cmd = '1') then
+                if(start_cmd_i = '1') then
                     state <= SET;
                 end if;
             when SET =>

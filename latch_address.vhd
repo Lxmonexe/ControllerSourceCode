@@ -34,13 +34,13 @@ use work.onfi.all;
 
 entity latch_address is
 Port (
-    clk : in std_logic;
-    start_addr : in std_logic;
-    ale : out std_logic;
-    addr_we_n : out std_logic;
-    addr_in : in std_logic_vector(7 downto 0);
-    addr_out : out std_logic_vector(7 downto 0);
-    addr_busy : out std_logic
+    clk_i : in std_logic;
+    start_addr_i : in std_logic;
+    ale_o : out std_logic;
+    addr_we_n_o : out std_logic;
+    addr_in_i : in std_logic_vector(7 downto 0);
+    addr_out_o : out std_logic_vector(7 downto 0);
+    addr_busy_o : out std_logic
  );
 end latch_address;
  
@@ -54,17 +54,17 @@ signal counter : integer := 0;
 
 begin
 
-ale <= '1' when (state = LOAD or state = SEND or state = DONE) else '0';
-addr_we_n <= '0' when (state = SEND) else '1';
-addr_out <= addr_in when (state = LOAD or state = SEND or state = DONE) else "ZZZZZZZZ";
-addr_busy <= '1' when (state /= IDLE) else '0';
+ale_o <= '1' when (state = LOAD or state = SEND or state = DONE) else '0';
+addr_we_n_o <= '0' when (state = SEND) else '1';
+addr_out_o <= addr_in_i when (state = LOAD or state = SEND or state = DONE) else "ZZZZZZZZ";
+addr_busy_o <= '1' when (state /= IDLE) else '0';
 
-ADDR_FSM : process(clk, start_addr)
+ADDR_FSM : process(clk_i, start_addr_i)
 begin
-    if(rising_edge(clk)) then
+    if(rising_edge(clk_i)) then
         case state is
             when IDLE =>
-                if(start_addr = '1') then
+                if(start_addr_i = '1') then
                     state <= SEND;
                 end if;
             --when LOAD =>
