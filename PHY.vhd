@@ -74,7 +74,7 @@ nand_cle <= cle_i when (Sstate_i = LATCHCMD and Mstate_i /= IDLE) else '0';
 
 nand_ale <= ale_i when (Sstate_i = LATCHADDR and Mstate_i /= IDLE) else '0';
 
-nand_we_n <= cmd_we_n_i when (Sstate_i = LATCHCMD and Mstate /= IDLE) else
+nand_we_n <= cmd_we_n_i when (Sstate_i = LATCHCMD and Mstate_i /= IDLE) else
              addr_we_n_i when (Sstate_i = LATCHADDR and Mstate_i /= IDLE) else
              w_we_n_i when (Sstate_i = WRITEDATA and Mstate_i /= IDLE) else '1';
              
