@@ -18,14 +18,14 @@ entity axi_top is
 		-- Users to add ports here
 		clk_controller_i : in std_logic;
 		--rst : in std_logic;
-        --nand_ce_n : out std_logic;
-        --nand_cle : out std_logic;
-        --nand_ale : out std_logic;
-        --nand_we_n : out std_logic;
-        --nand_re_n : out std_logic;
-        --nand_wp_n : out std_logic;
-        --nand_data : inout std_logic_vector(7 downto 0);
-        --nand_rb_n : in std_logic;
+        nand_ce_n : out std_logic;
+        nand_cle : out std_logic;
+        nand_ale : out std_logic;
+        nand_we_n : out std_logic;
+        nand_re_n : out std_logic;
+        nand_wp_n : out std_logic;
+        nand_data : inout std_logic_vector(7 downto 0);
+        nand_rb_n : in std_logic;
 		-- User ports ends
 		-- Do not modify the ports beyond this line
 
@@ -113,16 +113,16 @@ architecture arch_imp of axi_top is
 --);
 --end component;
 
-signal nand_data : std_logic_vector(7 downto 0);
-signal nand_dqs : std_logic := '1'; --interface synchrone
-signal nand_cle, nand_ale : std_logic ;
-signal nand_ce_n, nand_we_n, nand_re_n : std_logic;
-signal nand_wp_n : std_logic;
-signal nand_rb_n : std_logic;
+--signal nand_data : std_logic_vector(7 downto 0);
+--signal nand_dqs : std_logic := '1'; --interface synchrone
+--signal nand_cle, nand_ale : std_logic ;
+--signal nand_ce_n, nand_we_n, nand_re_n : std_logic;
+--signal nand_wp_n : std_logic;
+--signal nand_rb_n : std_logic;
 signal clk_s : std_logic;
 
 begin
-
+ 
 -- Instantiation of Axi Bus Interface S00_AXI
 Axi_top_slave_lite_v1_0_S00_AXI_inst : Axi_top_slave_lite_v1_0_S00_AXI
 	generic map (
