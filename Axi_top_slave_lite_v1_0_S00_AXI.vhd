@@ -18,7 +18,7 @@ entity Axi_top_slave_lite_v1_0_S00_AXI is
 	);
 	port (
 		-- Users to add ports here
-
+        
 		-- User ports ends
 		-- Do not modify the ports beyond this line
 
@@ -85,6 +85,8 @@ entity Axi_top_slave_lite_v1_0_S00_AXI is
 		
 		clk_controller_i : in std_logic;
 		
+		dbg_btn_i : in std_logic;
+		
 		nand_ce_n : out std_logic;
         nand_cle : out std_logic;
         nand_ale : out std_logic;
@@ -119,13 +121,21 @@ architecture arch_imp of Axi_top_slave_lite_v1_0_S00_AXI is
 	------------------------------------------------
 	---- Signals for user logic register space example
 	--------------------------------------------------
-	---- Number of Slave Registers 6
+	---- Number of Slave Registers 14
 	signal slv_reg0	:std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
 	signal slv_reg1	:std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
 	signal slv_reg2	:std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
 	signal slv_reg3	:std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
 	signal slv_reg4	:std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
 	signal slv_reg5	:std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0) := x"00030001"; --version V3.1
+	signal slv_reg6	:std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0) := x"00000005"; -- register for t_wp timing
+	signal slv_reg7	:std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0) := x"00000002"; -- register for t_clh timing
+	signal slv_reg8	:std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0) := x"00000005"; -- register for t_cls timing
+	signal slv_reg9	:std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0) := x"00000002"; -- register for t_dh timing
+	signal slv_reg10	:std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0):= x"00000005" ; -- register for t_rp timing
+	signal slv_reg11	:std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0):= x"00000001" ; -- register for t_rhz timing
+	signal slv_reg12	:std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0):= x"00000002" ; -- register for t_lc = (t_cls - t_wp) timing
+	signal slv_reg13	:std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0):= x"00000001" ; -- register for t_la = (t_wh - t_dh) timing
 	signal byte_index	: integer;
 
 	 signal mem_logic  : std_logic_vector(ADDR_LSB + OPT_MEM_ADDR_BITS downto ADDR_LSB);
@@ -142,11 +152,22 @@ architecture arch_imp of Axi_top_slave_lite_v1_0_S00_AXI is
 	component Controller_top is
 Port ( 
     clk : in std_logic;
-    cmd_register: in std_logic_vector(31 downto 0);
-    ctrl_register: in std_logic_vector(31 downto 0);
-    addr_register: in std_logic_vector(31 downto 0);
-    addr_bis_register: in std_logic_vector(31 downto 0);
-    status_register: out std_logic_vector(31 downto 0);
+    
+    dbg_btn_i : in std_logic;
+    
+    cmd_register_i: in std_logic_vector(31 downto 0);
+    ctrl_register_i: in std_logic_vector(31 downto 0);
+    addr_register_i: in std_logic_vector(31 downto 0);
+    addr_bis_register_i: in std_logic_vector(31 downto 0);
+    status_register_o: out std_logic_vector(31 downto 0);
+    twp_register_i: in std_logic_vector(31 downto 0);
+    tclh_register_i: in std_logic_vector(31 downto 0);
+    tcls_register_i: in std_logic_vector(31 downto 0);
+    tdh_register_i: in std_logic_vector(31 downto 0);
+    trp_register_i: in std_logic_vector(31 downto 0);
+    trhz_register_i: in std_logic_vector(31 downto 0);
+    tlc_register_i: in std_logic_vector(31 downto 0);
+    tla_register_i: in std_logic_vector(31 downto 0);
     
     clk_a_o      : out  std_logic;
     write_en_a_o : out  std_logic;
@@ -165,12 +186,19 @@ Port (
     );
 end component;
 	
-	signal cmd_register:  std_logic_vector(31 downto 0);
-    signal ctrl_register:  std_logic_vector(31 downto 0);
-    signal status_register: std_logic_vector(31 downto 0);
-    signal addr_register:  std_logic_vector(31 downto 0);
-    signal addr_bis_register:  std_logic_vector(31 downto 0);
-	
+	signal cmd_register_s:  std_logic_vector(31 downto 0);
+    signal ctrl_register_s:  std_logic_vector(31 downto 0);
+    signal status_register_s: std_logic_vector(31 downto 0);
+    signal addr_register_s:  std_logic_vector(31 downto 0);
+    signal addr_bis_register_s:  std_logic_vector(31 downto 0);
+	signal twp_register_s:  std_logic_vector(31 downto 0);
+    signal tclh_register_s:  std_logic_vector(31 downto 0) ;
+    signal tcls_register_s:  std_logic_vector(31 downto 0) ;
+    signal tdh_register_s:  std_logic_vector(31 downto 0) ;
+    signal trp_register_s:  std_logic_vector(31 downto 0) ;
+    signal trhz_register_s:  std_logic_vector(31 downto 0);
+    signal tlc_register_s:  std_logic_vector(31 downto 0);
+    signal tla_register_s:  std_logic_vector(31 downto 0);
 	
 	component true_dual_port_bram is
     generic (
@@ -214,11 +242,20 @@ begin
     Controller : Controller_top port map
 (
     clk => clk_controller_i,
-    cmd_register => cmd_register,
-    ctrl_register => ctrl_register,
-    addr_register => addr_register,
-    addr_bis_register => addr_bis_register,
-    status_register => status_register,
+    dbg_btn_i => dbg_btn_i,
+    cmd_register_i => cmd_register_s,
+    ctrl_register_i => ctrl_register_s,
+    addr_register_i => addr_register_s,
+    addr_bis_register_i => addr_bis_register_s,
+    status_register_o => status_register_s,
+    twp_register_i => twp_register_s,
+    tclh_register_i => tclh_register_s,
+    tcls_register_i => tcls_register_s,
+    tdh_register_i => tdh_register_s,
+    trp_register_i => trp_register_s,
+    trhz_register_i => trhz_register_s,
+    tlc_register_i => tlc_register_s,
+    tla_register_i => tla_register_s,
     
     clk_a_o => clk_a_i,
     write_en_a_o => write_en_a_i,
@@ -249,12 +286,31 @@ begin
         data_b_i => S_AXI_WDATA,
         data_b_o => data_b_out_s
     );
-
-    slv_reg0 <= status_register;
-	ctrl_register <= slv_reg1;
-	cmd_register <= slv_reg2;
-	addr_register <= slv_reg3;
-	addr_bis_register <= slv_reg4;
+    
+    process(S_AXI_ACLK)
+    begin
+        if rising_edge(S_AXI_ACLK) then
+            slv_reg0 <= status_register_s;    
+        end if;
+    end process;
+    
+    process(clk_controller_i)
+    begin
+        if rising_edge(clk_controller_i) then
+	       ctrl_register_s <= slv_reg1;
+	       cmd_register_s <= slv_reg2;
+	       addr_register_s <= slv_reg3;
+	       addr_bis_register_s <= slv_reg4;
+           twp_register_s <= slv_reg6;
+           tclh_register_s <= slv_reg7;
+           tcls_register_s <= slv_reg8;
+           tdh_register_s <= slv_reg9;
+           trp_register_s <= slv_reg10;
+           trhz_register_s <= slv_reg11;
+	       tlc_register_s <= slv_reg12;
+	       tla_register_s <= slv_reg13;
+	   end if;
+	end process;
 	
 	write_en_b_s <= '1' when ( S_AXI_WREADY = '1' and  S_AXI_WVALID = '1' and  S_AXI_AWADDR(17 downto 16) = "11") else '0';
 	
@@ -357,6 +413,14 @@ begin
 	      slv_reg2 <= (others => '0');
 	      slv_reg3 <= (others => '0');
 	      slv_reg4 <= (others => '0');
+	      slv_reg6 <= x"00000005";   -------------------------------------------------
+	      slv_reg7 <= x"00000002";   --
+	      slv_reg8 <= x"00000005";   -- timing mode 0 with a clk_controller at 100 MHz
+	      slv_reg9 <= x"00000002";   -- in SDR
+	      slv_reg10 <= x"00000005";  --
+	      slv_reg11 <= x"00000001";  --
+	      slv_reg12 <= x"00000002";  --
+	      slv_reg13 <= x"00000001";  -------------------------------------------------
 	    else
 	      if (S_AXI_WVALID = '1') then
 	          case (mem_logic) is
@@ -404,10 +468,74 @@ begin
 	            for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
 	              if ( S_AXI_WSTRB(byte_index) = '1' ) then
 	                -- Respective byte enables are asserted as per write strobes                   
-	                -- slave registor 4
+	                -- slave registor 5
 	                slv_reg5(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
 	              end if;
-	            end loop; 
+	            end loop;
+	          when b"0000000000000110" =>
+	            for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
+	              if ( S_AXI_WSTRB(byte_index) = '1' ) then
+	                -- Respective byte enables are asserted as per write strobes                   
+	                -- slave registor 6
+	                slv_reg6(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
+	              end if;
+	            end loop;   
+	          when b"0000000000000111" =>
+	            for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
+	              if ( S_AXI_WSTRB(byte_index) = '1' ) then
+	                -- Respective byte enables are asserted as per write strobes                   
+	                -- slave registor 7
+	                slv_reg7(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
+	              end if;
+	            end loop;
+	          when b"0000000000001000" =>
+	            for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
+	              if ( S_AXI_WSTRB(byte_index) = '1' ) then
+	                -- Respective byte enables are asserted as per write strobes                   
+	                -- slave registor 8
+	                slv_reg8(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
+	              end if;
+	            end loop;
+	          when b"0000000000001001" =>
+	            for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
+	              if ( S_AXI_WSTRB(byte_index) = '1' ) then
+	                -- Respective byte enables are asserted as per write strobes                   
+	                -- slave registor 9
+	                slv_reg9(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
+	              end if;
+	            end loop;
+	          when b"0000000000001010" =>
+                for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
+                    if (S_AXI_WSTRB(byte_index) = '1') then
+                        -- Respective byte enables are asserted as per write strobes
+                        -- slave register 10
+                        slv_reg10(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
+                    end if;
+                end loop;
+            when b"0000000000001011" =>
+                for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
+                    if (S_AXI_WSTRB(byte_index) = '1') then
+                        -- Respective byte enables are asserted as per write strobes
+                        -- slave register 11
+                        slv_reg11(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
+                    end if;
+                end loop;
+	          when b"0000000000001100" =>
+                for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
+                    if (S_AXI_WSTRB(byte_index) = '1') then
+                        -- Respective byte enables are asserted as per write strobes
+                        -- slave register 12
+                        slv_reg12(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
+                    end if;
+                end loop;
+	          when b"0000000000001101" =>
+                for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
+                    if (S_AXI_WSTRB(byte_index) = '1') then
+                        -- Respective byte enables are asserted as per write strobes
+                        -- slave register 13
+                        slv_reg13(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
+                    end if;
+                end loop;
 	          when others =>
 	            --slv_reg0 <= slv_reg0;
 	            slv_reg1 <= slv_reg1;
@@ -415,6 +543,14 @@ begin
 	            slv_reg3 <= slv_reg3;
 	            slv_reg4 <= slv_reg4;
 	            slv_reg5 <= slv_reg5;
+	            slv_reg6 <= slv_reg6;
+                slv_reg7 <= slv_reg7;
+                slv_reg8 <= slv_reg8;
+                slv_reg9 <= slv_reg9;
+                slv_reg10 <= slv_reg10;
+                slv_reg11 <= slv_reg11;
+                slv_reg12 <= slv_reg12;
+                slv_reg13 <= slv_reg13;
 	        end case;
 	      end if;
 	    end if;
@@ -470,6 +606,14 @@ begin
 	 slv_reg3 when (axi_araddr(ADDR_LSB+OPT_MEM_ADDR_BITS downto ADDR_LSB) = "0000000000000011" ) else 
 	 slv_reg4 when (axi_araddr(ADDR_LSB+OPT_MEM_ADDR_BITS downto ADDR_LSB) = "0000000000000100" ) else
 	 slv_reg5 when (axi_araddr(ADDR_LSB+OPT_MEM_ADDR_BITS downto ADDR_LSB) = "0000000000000101" ) else
+	 slv_reg6 when (axi_araddr(ADDR_LSB + OPT_MEM_ADDR_BITS downto ADDR_LSB) = "0000000000000110") else
+     slv_reg7 when (axi_araddr(ADDR_LSB + OPT_MEM_ADDR_BITS downto ADDR_LSB) = "0000000000000111") else
+     slv_reg8 when (axi_araddr(ADDR_LSB + OPT_MEM_ADDR_BITS downto ADDR_LSB) = "0000000000001000") else
+     slv_reg9 when (axi_araddr(ADDR_LSB + OPT_MEM_ADDR_BITS downto ADDR_LSB) = "0000000000001001") else
+     slv_reg10 when (axi_araddr(ADDR_LSB + OPT_MEM_ADDR_BITS downto ADDR_LSB) = "0000000000001010") else
+     slv_reg11 when (axi_araddr(ADDR_LSB + OPT_MEM_ADDR_BITS downto ADDR_LSB) = "0000000000001011") else
+	 slv_reg12 when (axi_araddr(ADDR_LSB + OPT_MEM_ADDR_BITS downto ADDR_LSB) = "0000000000001100") else
+	 slv_reg13 when (axi_araddr(ADDR_LSB + OPT_MEM_ADDR_BITS downto ADDR_LSB) = "0000000000001101") else
 	 data_b_out_s when (axi_araddr(17 downto 16) = "11") else 
 	 (others => '0');
 
