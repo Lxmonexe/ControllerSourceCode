@@ -33,7 +33,8 @@ use work.onfi.all;
 --use UNISIM.VComponents.all;
 
 entity PHY is
-Port ( 
+Port (
+    clk_i : in std_logic; 
     nand_ce_n : out std_logic;
     nand_cle : out std_logic;
     nand_ale : out std_logic;
@@ -66,28 +67,47 @@ end PHY;
 
 architecture Behavioral of PHY is
 
+signal nand_ce_s : std_logic;
+signal nand_cle_s : std_logic;
+signal nand_ale_s : std_logic;
+signal nand_we_s : std_logic;
+signal nand_re_s : std_logic;
+signal nand_wp_s : std_logic;
+signal nand_data_s : std_logic_vector(7 downto 0);
+
 begin
 
-nand_ce_n <= '1' when (Mstate_i = IDLE) else '0';
+nand_ce_s <= '1' when (Mstate_i = IDLE) else '0';
 
-nand_cle <= cle_i when (Sstate_i = LATCHCMD and Mstate_i /= IDLE) else '0';
+nand_cle_s <= cle_i when (Sstate_i = LATCHCMD and Mstate_i /= IDLE) else '0';
 
-nand_ale <= ale_i when (Sstate_i = LATCHADDR and Mstate_i /= IDLE) else '0';
+nand_ale_s <= ale_i when (Sstate_i = LATCHADDR and Mstate_i /= IDLE) else '0';
 
-nand_we_n <= cmd_we_n_i when (Sstate_i = LATCHCMD and Mstate_i /= IDLE) else
+nand_we_s <= cmd_we_n_i when (Sstate_i = LATCHCMD and Mstate_i /= IDLE) else
              addr_we_n_i when (Sstate_i = LATCHADDR and Mstate_i /= IDLE) else
              w_we_n_i when (Sstate_i = WRITEDATA and Mstate_i /= IDLE) else '1';
              
-nand_re_n <= re_n_i when (Sstate_i = READDATA and Mstate_i /= IDLE) else '1';
+nand_re_s <= re_n_i when (Sstate_i = READDATA and Mstate_i /= IDLE) else '1';
 
 nand_data <= cmd_out_i when (Sstate_i = LATCHCMD and Mstate_i /= IDLE) else
              addr_out_i when (Sstate_i = LATCHADDR and Mstate_i /= IDLE) else
              w_data_out_i when (Sstate_i = WRITEDATA and Mstate_i /= IDLE) else "ZZZZZZZZ";
 
-nand_wp_n <= '1' when (Mstate_i /= IDLE) else '0'; -- à revoir 
+nand_wp_s <= '1' when (Mstate_i /= IDLE) else '0'; -- à revoir 
             
-r_data_out_o <= nand_data;
-           
-ready_busy_o <= nand_rb_n;
 
+process(clk_i, nand_rb_n, nand_data)
+begin
+    if rising_edge(clk_i) then
+       r_data_out_o <= nand_data;    
+       ready_busy_o <= nand_rb_n;
+       
+       nand_ce_n <= nand_ce_s;
+       nand_cle <= nand_cle_s;
+       nand_ale <= nand_ale_s;
+       nand_we_n <= nand_we_s;
+       nand_re_n <= nand_re_s;
+       nand_wp_n <= nand_wp_s; 
+    end if;
+end process;
 end Behavioral;
