@@ -122,20 +122,20 @@ architecture arch_imp of Axi_top_slave_lite_v1_0_S00_AXI is
 	---- Signals for user logic register space example
 	--------------------------------------------------
 	---- Number of Slave Registers 14
-	signal slv_reg0	:std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-	signal slv_reg1	:std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-	signal slv_reg2	:std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-	signal slv_reg3	:std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-	signal slv_reg4	:std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-	signal slv_reg5	:std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0) := x"00030001"; --version V3.1
-	signal slv_reg6	:std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0) := x"00000005"; -- register for t_wp timing
-	signal slv_reg7	:std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0) := x"00000002"; -- register for t_clh timing
-	signal slv_reg8	:std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0) := x"00000005"; -- register for t_cls timing
-	signal slv_reg9	:std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0) := x"00000002"; -- register for t_dh timing
-	signal slv_reg10	:std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0):= x"00000005" ; -- register for t_rp timing
-	signal slv_reg11	:std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0):= x"00000001" ; -- register for t_rhz timing
-	signal slv_reg12	:std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0):= x"00000002" ; -- register for t_lc = (t_cls - t_wp) timing
-	signal slv_reg13	:std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0):= x"00000001" ; -- register for t_la = (t_wh - t_dh) timing
+	signal slv_reg0	:std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0); --0
+	signal slv_reg1	:std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0); --4
+	signal slv_reg2	:std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0); --8
+	signal slv_reg3	:std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0); --12
+	signal slv_reg4	:std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0); --16
+	signal slv_reg5	:std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0) := x"00030001"; --version V3.1 --20
+	signal slv_reg6	:std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0) := x"00000005"; -- register for t_wp timing --24
+	signal slv_reg7	:std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0) := x"00000003"; -- register for t_clh timing --28
+	signal slv_reg8	:std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0) := x"00000005"; -- register for t_cls timing -- 32
+	signal slv_reg9	:std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0) := x"00000003"; -- register for t_dh timing --36
+	signal slv_reg10	:std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0):= x"00000005" ; -- register for t_rp timing --40
+	signal slv_reg11	:std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0):= x"00000014" ; -- register for t_rhz timing --44
+	signal slv_reg12	:std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0):= x"00000065" ; -- register for t_lc = (t_cls - t_wp) timing --48
+	signal slv_reg13	:std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0):= x"00000004" ; -- register for t_la = (t_wh - t_dh) timing --52
 	signal byte_index	: integer;
 
 	 signal mem_logic  : std_logic_vector(ADDR_LSB + OPT_MEM_ADDR_BITS downto ADDR_LSB);
@@ -414,13 +414,13 @@ begin
 	      slv_reg3 <= (others => '0');
 	      slv_reg4 <= (others => '0');
 	      slv_reg6 <= x"00000005";   -------------------------------------------------
-	      slv_reg7 <= x"00000002";   --
+	      slv_reg7 <= x"00000003";   --
 	      slv_reg8 <= x"00000005";   -- timing mode 0 with a clk_controller at 100 MHz
-	      slv_reg9 <= x"00000002";   -- in SDR
+	      slv_reg9 <= x"00000003";   -- in SDR
 	      slv_reg10 <= x"00000005";  --
-	      slv_reg11 <= x"00000001";  --
-	      slv_reg12 <= x"00000002";  --
-	      slv_reg13 <= x"00000001";  -------------------------------------------------
+	      slv_reg11 <= x"00000014";  --
+	      slv_reg12 <= x"00000065";  --
+	      slv_reg13 <= x"00000004";  -------------------------------------------------
 	    else
 	      if (S_AXI_WVALID = '1') then
 	          case (mem_logic) is

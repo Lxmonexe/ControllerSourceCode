@@ -65,7 +65,7 @@ begin
 
 cle_o <= '1' when (state = SET or state = SEND or state = DONE) else '0';
 cmd_we_n_o <= '0' when (state = SEND) else '1';
-cmd_out_o <= cmd_in_i when (state = SEND or state = DONE) else "10101010"; -- test pattern, should not appear outside due to high Z
+cmd_out_o <= cmd_in_i when (state = SEND or state = DONE) else "ZZZZZZZZ"; -- test pattern, should not appear outside due to high Z
 cmd_busy_o <= '1' when (state /= IDLE) else '0';
 
 CMD_FSM : process(clk_i, start_cmd_i)

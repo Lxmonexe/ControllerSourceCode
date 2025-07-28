@@ -162,6 +162,8 @@ Port (
 );
 end component;
 
+attribute MARK_DEBUG : string;
+
 
 ----- Master FSM signal -----
 signal Mstate : master_states := IDLE;
@@ -220,6 +222,7 @@ signal addr_index : integer := 0;
 signal data_a_i_s : std_logic_vector(7 downto 0);
 signal data_a_o_s : std_logic_vector(7 downto 0);
 
+
 ----- Register signal -----
 signal twp_register_s:  std_logic_vector(31 downto 0);
 signal tclh_register_s:  std_logic_vector(31 downto 0);
@@ -235,8 +238,6 @@ signal enable : std_logic := '0';
 signal btn : std_logic;
 
 begin
-
-
 
 CMD_FSM : latch_command port map
 (
@@ -361,7 +362,7 @@ begin
     end if;
 end process;
 
-MASTER_FSM : process(clk, ctrl_register_i, done, enable)
+MASTER_FSM : process(all)
 begin
    
     if rising_edge(clk) then
@@ -436,7 +437,7 @@ begin
                 
             when READID =>
                 cmd_in_s <= x"90";
-                addr_in_s <= x"20";
+                addr_in_s <= addr_register_i(7 downto 0);
                 if(Sstate = LATCHCMD) then
                     delay_t <= CMDWAIT;
                     PreviousMstate <= Mstate;
@@ -465,7 +466,7 @@ begin
                 
             when READPARAM =>
                 cmd_in_s <= x"EC";
-                addr_in_s <= x"00";
+                addr_in_s <= addr_register_i(7 downto 0);
                 if(Sstate = LATCHCMD) then
                     delay_t <= CMDWAIT;
                     PreviousMstate <= Mstate;

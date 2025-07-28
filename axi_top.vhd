@@ -233,8 +233,6 @@ end process;
 	-- User logic ends
 --nand_ce1_n <= nand_ce_s;
 --nand_rb_s <= nand_rb1_n;
-nand_ce0_n <= '1';
-nand_ce2_n <= '1';
-nand_ce3_n <= '1';
+
 
 end arch_imp;
