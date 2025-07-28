@@ -63,7 +63,7 @@ begin
 
 ale_o <= '1' when (state = SEND or state = DONE) else '0';
 addr_we_n_o <= '0' when (state = SEND) else '1';
-addr_out_o <= addr_in_i when (state = SEND or state = DONE) else "10101010";
+addr_out_o <= addr_in_i when (state = SEND or state = DONE) else "ZZZZZZZZ";
 addr_busy_o <= '1' when (state /= IDLE) else '0';
 
 ADDR_FSM : process(clk_i, start_addr_i)
