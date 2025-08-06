@@ -88,7 +88,7 @@ architecture rtl of true_dual_port_bram is
     -------------
     -- Signals --
     -------------
-    signal bram_s : bram_t := (others => (others => '1'));
+    signal bram_s : bram_t;
 
 begin
 
