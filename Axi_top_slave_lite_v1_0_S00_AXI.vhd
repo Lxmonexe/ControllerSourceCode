@@ -134,7 +134,7 @@ architecture arch_imp of Axi_top_slave_lite_v1_0_S00_AXI is
 	signal slv_reg9	:std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0) := x"00000003"; -- register for t_dh timing --36
 	signal slv_reg10	:std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0):= x"00000005" ; -- register for t_rp timing --40
 	signal slv_reg11	:std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0):= x"00000014" ; -- register for t_rhz timing --44
-	signal slv_reg12	:std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0):= x"00000065" ; -- register for t_lc = (t_cls - t_wp) timing --48
+	signal slv_reg12	:std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0):= x"0000000a" ; -- register for t_lc = (t_cls - t_wp) timing --48
 	signal slv_reg13	:std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0):= x"00000004" ; -- register for t_la = (t_wh - t_dh) timing --52
 	signal byte_index	: integer;
 

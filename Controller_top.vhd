@@ -216,11 +216,10 @@ signal r_busy_s :  std_logic;
 signal ready_busy_s : std_logic;
 
 ----- BRAM signal ------
-signal BRAM_enable : std_logic;
+signal BRAM_enable : std_logic := '0';
 signal addr_offset : integer := 0;
 signal addr_index : integer := 0;
-signal data_a_i_s : std_logic_vector(7 downto 0);
-signal data_a_o_s : std_logic_vector(7 downto 0);
+signal bram_counter_s : integer := 0;
 
 
 ----- Register signal -----
@@ -325,12 +324,19 @@ PHY_interface : PHY port map
 );
 
 
-
+twp_register_s <= twp_register_i;
+tclh_register_s <= tclh_register_i;  
+tcls_register_s <= tcls_register_i;   
+tdh_register_s <= tdh_register_i;   
+trp_register_s <= trp_register_i;  
+trhz_register_s <= trhz_register_i;   
+tlc_register_s <= tlc_register_i;  
+tla_register_s <= tla_register_i;
 
 start_cmd_s <= '1' when (Sstate = LATCHCMD) else '0';
 start_addr_s <= '1' when (Sstate = LATCHADDR) else '0';
-start_write_s <= '1' when (Sstate = WRITEDATA) else '0';
-start_read_s <= '1' when (Sstate = READDATA) else '0';
+start_write_s <= '1' when (Sstate = WRITEDATA and ready_busy_s /= '0') else '0';
+start_read_s <= '1' when (Sstate = READDATA and ready_busy_s /= '0') else '0';
 
 
 controller_ready <= '0' when (Mstate /= IDLE or ready_busy_s = '0') else '1';
@@ -338,10 +344,23 @@ controller_ready <= '0' when (Mstate /= IDLE or ready_busy_s = '0') else '1';
 
 status_register_o(0) <= controller_ready;
 status_register_o(1) <= done;
+status_register_o(2) <= '1' when Mstate = RESET else '0';
+status_register_o(3) <= '1' when Mstate = READID else '0';
+status_register_o(4) <= '1' when Mstate = READPARAM else '0';
+status_register_o(5) <= '1' when Mstate = READSTATUS else '0';
+status_register_o(6) <= '1' when Mstate = READ else '0';
+status_register_o(7) <= '1' when Mstate = PAGEPROGRAM else '0';
+status_register_o(8) <= '1' when Mstate = ERASE else '0';
+status_register_o(9) <= '1' when (Mstate = SETFEATURES or Mstate = GETFEATURES) else '0';
+status_register_o(10) <= '1' when Mstate = IDLE else '0';
+status_register_o(11) <= '1' when Sstate = LATCHCMD else '0';
+status_register_o(12) <= '1' when Sstate = LATCHADDR else '0';
+status_register_o(13) <= '1' when Sstate = READDATA else '0';
+status_register_o(14) <= '1' when Sstate = WRITEDATA else '0';
+status_register_o(29 downto 15) <= "000000000000000";
 
-BRAM_enable <= '1' when (wait_counter = 1 and (re_n_s = '0' xor w_we_n_s = '0')) else '0';
 
-EN: process(clk, dbg_btn_i, done)
+EN: process(all)
 begin
     if rising_edge(clk) then
         btn <= dbg_btn_i;
@@ -351,14 +370,7 @@ begin
         if (done = '1' and enable = '1') then
             enable <= '0';
         end if;
-        twp_register_s <= twp_register_i;
-        tclh_register_s <= tclh_register_i;  
-        tcls_register_s <= tcls_register_i;   
-        tdh_register_s <= tdh_register_i;   
-        trp_register_s <= trp_register_i;  
-        trhz_register_s <= trhz_register_i;   
-        tlc_register_s <= tlc_register_i;  
-        tla_register_s <= tla_register_i;
+        
     end if;
 end process;
 
@@ -382,8 +394,8 @@ begin
             done <= '0';
         
         elsif(ctrl_register_i(0) = '1' and done = '0' and enable = '1') then
-            case Mstate is 
-        
+            
+            case Mstate is
             when IDLE =>
                 if(wait_done = '1') then
                     done <= '1';
@@ -427,6 +439,7 @@ begin
                 else
                     status_register_o(30) <= '1'; 
                 end if;
+                status_register_o(31) <= '0';
                 
             when RESET =>
                 cmd_in_s <= x"FF";
@@ -498,7 +511,7 @@ begin
                     end if;
                 end if;
                 
-            when READSTATUS => 
+            when READSTATUS =>
                 cmd_in_s <= x"70";
                 if(Sstate = LATCHCMD) then
                     delay_t <= CMDWAIT;
@@ -506,12 +519,76 @@ begin
                     NextSstate <= READDATA;
                     Mstate <= SUBWAIT;
                 elsif(Sstate = READDATA) then
-                    if(ready_busy_s /= '0' and ready_counter = 1) then
-                        ready_counter <= 0;
+                    --if(ready_busy_s /= '0' and ready_counter = 1) then
+                       -- ready_counter <= 0;
                         delay_t <= READWAIT;
                         PreviousMstate <= IDLE;
                         NextSstate <= subIDLE;
                         Mstate <= SUBWAIT;
+                    --elsif(ready_busy_s = '0' and ready_counter = 0) then
+                   --     ready_counter <= 1;
+                   -- end if;
+                end if;
+                                
+            when READ =>
+                cmd_in_s <= x"00";
+                if(Sstate = LATCHCMD) then
+                    if(counter = 1) then
+                        counter <= 0;
+                        cmd_in_s <= x"30";
+                        delay_t <= CMDWAIT;
+                        PreviousMstate <= Mstate;
+                        NextSstate <= READDATA; 
+                        Mstate <= SUBWAIT;
+                    elsif(counter = 0) then
+                        cmd_in_s <= x"00";
+                        delay_t <= CMDWAIT;
+                        PreviousMstate <= Mstate;
+                        NextSstate <= LATCHADDR;
+                        Mstate <= SUBWAIT;
+                        counter <= 1;
+                    end if;
+                elsif(Sstate = LATCHADDR) then
+                    if(address_cycle_count = 0) then
+                        addr_in_s <= addr_register_i(7 downto 0);
+                    elsif(address_cycle_count = 1) then
+                        addr_in_s <= addr_register_i(15 downto 8);
+                    elsif(address_cycle_count = 2) then
+                        addr_in_s <= addr_register_i(23 downto 16);
+                    elsif(address_cycle_count = 3) then
+                        addr_in_s <= addr_register_i(31 downto 24);
+                    elsif(address_cycle_count = 4) then
+                        addr_in_s <= addr_bis_register_i(7 downto 0);
+                    end if; 
+                    if(address_cycle_count = 4) then
+                        address_cycle_count <= 0;
+                        delay_t <= ADDRWAIT;
+                        PreviousMstate <= Mstate;
+                        NextSstate <= LATCHCMD;
+                        Mstate <= SUBWAIT;
+                    else
+                        delay_t <= ADDRWAIT;
+                        PreviousMstate <= Mstate;
+                        NextSstate <= Sstate;
+                        Mstate <= SUBWAIT;
+                        address_cycle_count <= address_cycle_count + 1;
+                    end if;
+                elsif(Sstate = READDATA) then
+                    if(ready_busy_s /= '0' and ready_counter = 1) then
+                        if(read_cycle_count = 2048 * TO_INTEGER(unsigned(cmd_register_i(18 downto 15)))) then
+                            ready_counter <= 0;
+                            read_cycle_count <= 0;
+                            delay_t <= READWAIT;
+                            PreviousMstate <= IDLE;
+                            NextSstate <= subIDLE;
+                            Mstate <= SUBWAIT;
+                        else
+                            delay_t <= READWAIT;
+                            PreviousMstate <= Mstate;
+                            NextSstate <= Sstate;
+                            Mstate <= SUBWAIT;
+                            read_cycle_count <= read_cycle_count + 1;
+                        end if;
                     elsif(ready_busy_s = '0' and ready_counter = 0) then
                         ready_counter <= 1;
                     end if;
@@ -574,70 +651,6 @@ begin
                         NextSstate <= Sstate;
                         Mstate <= SUBWAIT;
                         read_cycle_count <= read_cycle_count + 1;
-                    end if;
-                end if;
-                
-            when READ =>
-                cmd_in_s <= x"00";
-                if(Sstate = LATCHCMD) then
-                    if(counter = 1) then
-                        counter <= 0;
-                        cmd_in_s <= x"30";
-                        delay_t <= CMDWAIT;
-                        PreviousMstate <= Mstate;
-                        NextSstate <= READDATA; 
-                        Mstate <= SUBWAIT;
-                    elsif(counter = 0) then
-                        cmd_in_s <= x"00";
-                        delay_t <= CMDWAIT;
-                        PreviousMstate <= Mstate;
-                        NextSstate <= LATCHADDR;
-                        Mstate <= SUBWAIT;
-                        counter <= 1;
-                    end if;
-                elsif(Sstate = LATCHADDR) then
-                    if(address_cycle_count = 0) then
-                        addr_in_s <= addr_register_i(7 downto 0);
-                    elsif(address_cycle_count = 1) then
-                        addr_in_s <= addr_register_i(15 downto 8);
-                    elsif(address_cycle_count = 2) then
-                        addr_in_s <= addr_register_i(23 downto 16);
-                    elsif(address_cycle_count = 3) then
-                        addr_in_s <= addr_register_i(31 downto 24);
-                    elsif(address_cycle_count = 4) then
-                        addr_in_s <= addr_bis_register_i(7 downto 0);
-                    end if; 
-                    if(address_cycle_count = 4) then
-                        address_cycle_count <= 0;
-                        delay_t <= ADDRWAIT;
-                        PreviousMstate <= Mstate;
-                        NextSstate <= LATCHCMD;
-                        Mstate <= SUBWAIT;
-                    else
-                        delay_t <= ADDRWAIT;
-                        PreviousMstate <= Mstate;
-                        NextSstate <= Sstate;
-                        Mstate <= SUBWAIT;
-                        address_cycle_count <= address_cycle_count + 1;
-                    end if;
-                elsif(Sstate = READDATA) then
-                    if(ready_busy_s /= '0' and ready_counter = 1) then
-                        if(read_cycle_count = 2048 * TO_INTEGER(unsigned(cmd_register_i(18 downto 15)))) then
-                            ready_counter <= 0;
-                            read_cycle_count <= 0;
-                            delay_t <= READWAIT;
-                            PreviousMstate <= IDLE;
-                            NextSstate <= subIDLE;
-                            Mstate <= SUBWAIT;
-                        else
-                            delay_t <= READWAIT;
-                            PreviousMstate <= Mstate;
-                            NextSstate <= Sstate;
-                            Mstate <= SUBWAIT;
-                            read_cycle_count <= read_cycle_count + 1;
-                        end if;
-                    elsif(ready_busy_s = '0' and ready_counter = 0) then
-                        ready_counter <= 1;
                     end if;
                 end if;
                 
@@ -807,48 +820,47 @@ begin
                 
             when others =>
                 Mstate <= IDLE;
+                status_register_o(31) <= '1';
         end case;
         end if;
     end if;
 end process;
 
 
-status_register_o(2) <= '1' when Mstate = RESET else '0';
-status_register_o(3) <= '1' when Mstate = READID else '0';
-status_register_o(4) <= '1' when Mstate = READPARAM else '0';
-status_register_o(5) <= '1' when Mstate = READSTATUS else '0';
-status_register_o(6) <= '1' when Mstate = READ else '0';
-status_register_o(7) <= '1' when Mstate = PAGEPROGRAM else '0';
-status_register_o(8) <= '1' when Mstate = ERASE else '0';
-status_register_o(9) <= '1' when (Mstate = SETFEATURES or Mstate = GETFEATURES) else '0';
-status_register_o(10) <= '1' when Mstate = IDLE else '0';
-status_register_o(11) <= '1' when Sstate = LATCHCMD else '0';
-status_register_o(12) <= '1' when Sstate = LATCHADDR else '0';
-status_register_o(13) <= '1' when Sstate = READDATA else '0';
-status_register_o(14) <= '1' when Sstate = WRITEDATA else '0';
 
 
+
+BRAM_enable <= '1' when (wait_counter = 1 and (re_n_s = '0' xor w_we_n_s = '0') and ( Sstate = WRITEDATA or Sstate = READDATA)) else '0';
 write_en_a_o <= '1' when (Sstate = READDATA and BRAM_enable = '1') else '0';
 clk_a_o <= clk;
-w_data_in_s <= data_a_i_s when BRAM_enable = '1' else "00000000";
-data_a_o_s <= r_data_out_s when BRAM_enable = '1' else "00000000";
+
 addr_index <= 0 when cmd_register_i(11 downto 10) = "00" else 
               16384 when cmd_register_i(11 downto 10) = "01" else
               32768 when cmd_register_i(11 downto 10) = "10" else
               49152 when cmd_register_i(11 downto 10) = "11" else 0;
+
+w_data_in_s <= data_a_i;
+data_a_o <= r_data_out_s; 
+
               
 BRAM_process: process(clk, BRAM_enable, Mstate)
 begin
     
     if rising_edge(clk) then
-        if(BRAM_enable = '1') then
+        if BRAM_enable = '1' then
             addr_a_o <= std_logic_vector(to_unsigned(addr_index + addr_offset, addr_a_o'length));
+            if bram_counter_s = 0 then
+                bram_counter_s <= 1;
+            end if;
+        elsif(bram_counter_s = 1) then
             addr_offset <= addr_offset + 1;
-        elsif(Mstate = IDLE) then
+            bram_counter_s <= 0;
+        else
+            bram_counter_s <= 0;
+        end if;
+        if(Mstate = IDLE) then 
             addr_offset <= 0;
         end if;
-        data_a_o <= data_a_o_s;
-        data_a_i_s <= data_a_i;
     end if;
    
 end process;

@@ -132,7 +132,8 @@ architecture arch_imp of axi_top is
 --signal nand_ce_n, nand_we_n, nand_re_n : std_logic;
 --signal nand_wp_n : std_logic;
 --signal nand_rb_n : std_logic;
---signal clk_s : std_logic;
+
+
 signal nand_ce_s : std_logic;
 signal nand_rb_s : std_logic;
 
@@ -185,11 +186,11 @@ Axi_top_slave_lite_v1_0_S00_AXI_inst : Axi_top_slave_lite_v1_0_S00_AXI
 --    Dqs => nand_dqs,
 --    Cle => nand_cle,
 --    Ale => nand_ale,
---    Ce_n => nand_ce_n,
+--    Ce_n => nand_ce_s,
 --    Clk_We_n => nand_we_n,
 --    Wr_Re_n => nand_re_n,
 --    Wp_n => nand_wp_n,
---    Rb_n => nand_rb_n 
+--    Rb_n => nand_rb_s 
 --);
 
 dbg_nand_data <= nand_data;
@@ -231,8 +232,6 @@ begin
     end if;
 end process;
 	-- User logic ends
---nand_ce1_n <= nand_ce_s;
---nand_rb_s <= nand_rb1_n;
 
 
 end arch_imp;

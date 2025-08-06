@@ -56,9 +56,9 @@ signal t_dh_s : integer := 0;
 
 begin
 
-
+w_data_out_o <= w_data_in_i;
 w_we_n_o <= '0' when (state = WRITE) else '1';
-w_data_out_o <= w_data_in_i when (state = WRITE or state = DONE) else "ZZZZZZZZ";
+--w_data_out_o <= w_data_in_i when (state = WRITE or state = DONE) else "ZZZZZZZZ";
 w_busy_o <= '1' when (state /= IDLE) else '0';
 
 WRITE_FSM : process(clk_i, start_write_i)

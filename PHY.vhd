@@ -96,12 +96,12 @@ nand_data <= cmd_out_i when (Sstate_i = LATCHCMD and Mstate_i /= IDLE) else
 nand_wp_s <= '1' when (Mstate_i /= IDLE) else '0'; -- à revoir 
             
 
+
 process(clk_i, nand_rb_n, nand_data)
 begin
     if rising_edge(clk_i) then
-       r_data_out_o <= nand_data;    
        ready_busy_o <= nand_rb_n;
-       
+       r_data_out_o <= nand_data;
        nand_ce_n <= nand_ce_s;
        nand_cle <= nand_cle_s;
        nand_ale <= nand_ale_s;

@@ -56,8 +56,9 @@ signal t_rhz_s : integer := 0;
 
 begin
 
+r_data_in_o <= r_data_out_i;
 re_n_o <= '0' when (state = READ) else '1';
-r_data_in_o <= r_data_out_i when (state = READ or state = DONE) else "ZZZZZZZZ";
+--r_data_in_o <= r_data_out_i when (state = READ or state = DONE) else "ZZZZZZZZ";
 r_busy_o <= '1' when (state /= IDLE) else '0';
 
 READ_FSM : process(clk_i, start_read_i)
