@@ -57,14 +57,20 @@ Port (
     data_a_o     : out  std_logic_vector(7 downto 0);
     data_a_i     : in std_logic_vector(7 downto 0);
     
-    nand_ce_n : out std_logic;
+    nand_ce0_n : out std_logic;
+    nand_ce1_n : out std_logic;
+    nand_ce2_n : out std_logic;
+    nand_ce3_n : out std_logic;
     nand_cle : out std_logic;
     nand_ale : out std_logic;
     nand_we_n : out std_logic;
     nand_re_n : out std_logic;
     nand_wp_n : out std_logic;
     nand_data : inout std_logic_vector(7 downto 0);
-    nand_rb_n : in std_logic
+    nand_rb0_n : in std_logic;
+    nand_rb1_n : in std_logic;
+    nand_rb2_n : in std_logic;
+    nand_rb3_n : in std_logic
     
     );
 end Controller_top;
@@ -76,10 +82,10 @@ component latch_command is
 Port (
     clk_i : in std_logic;
     start_cmd_i : in std_logic;
-    twp_register_i: in std_logic_vector(31 downto 0);
-    tclh_register_i: in std_logic_vector(31 downto 0);
-    tcls_register_i: in std_logic_vector(31 downto 0);
-    tlc_register_i: in std_logic_vector(31 downto 0);  
+    twp_i: in std_logic_vector(31 downto 0);
+    tclh_i: in std_logic_vector(31 downto 0);
+    tcls_i: in std_logic_vector(31 downto 0);
+    tlc_i: in std_logic_vector(31 downto 0);  
     cle_o : out std_logic;
     cmd_we_n_o : out std_logic;
     cmd_in_i : in std_logic_vector(7 downto 0);
@@ -92,9 +98,9 @@ component latch_address is
 Port (
     clk_i : in std_logic;
     start_addr_i : in std_logic;
-    twp_register_i: in std_logic_vector(31 downto 0);
-    tdh_register_i: in std_logic_vector(31 downto 0);
-    tla_register_i: in std_logic_vector(31 downto 0);
+    twp_i: in std_logic_vector(31 downto 0);
+    tdh_i: in std_logic_vector(31 downto 0);
+    tla_i: in std_logic_vector(31 downto 0);
     ale_o : out std_logic;
     addr_we_n_o : out std_logic;
     addr_in_i : in std_logic_vector(7 downto 0);
@@ -107,8 +113,8 @@ component write_data is
 Port ( 
     clk_i : in std_logic;
     start_write_i : in std_logic;
-    twp_register_i: in std_logic_vector(31 downto 0);
-    tdh_register_i: in std_logic_vector(31 downto 0);
+    twp_i: in std_logic_vector(31 downto 0);
+    tdh_i: in std_logic_vector(31 downto 0);
     w_we_n_o : out std_logic; 
     w_data_in_i : in std_logic_vector(7 downto 0);
     w_data_out_o : out std_logic_vector(7 downto 0);
@@ -120,8 +126,8 @@ component read_data is
 Port ( 
     clk_i : in std_logic;
     start_read_i : in std_logic;
-    trp_register_i: in std_logic_vector(31 downto 0);
-    trhz_register_i: in std_logic_vector(31 downto 0);
+    trp_i: in std_logic_vector(31 downto 0);
+    trhz_i: in std_logic_vector(31 downto 0);
     re_n_o : out std_logic;
     r_data_out_i : in std_logic_vector (7 downto 0);
     r_data_in_o : out std_logic_vector (7 downto 0);
@@ -132,15 +138,21 @@ end component;
 component PHY is
 Port (
     clk_i : in std_logic; 
-    nand_ce_n : out std_logic;
+    nand_ce0_n : out std_logic;
+    nand_ce1_n : out std_logic;
+    nand_ce2_n : out std_logic;
+    nand_ce3_n : out std_logic;
     nand_cle : out std_logic;
     nand_ale : out std_logic;
     nand_we_n : out std_logic;
     nand_re_n : out std_logic;
     nand_wp_n : out std_logic;
     nand_data : inout std_logic_vector(7 downto 0);
-    nand_rb_n : in std_logic;
-    
+    nand_rb0_n : in std_logic;
+    nand_rb1_n : in std_logic;
+    nand_rb2_n : in std_logic;
+    nand_rb3_n : in std_logic;
+     
     cle_i : in std_logic;
     cmd_we_n_i : in std_logic;
     cmd_out_i : in std_logic_vector (7 downto 0);
@@ -157,6 +169,7 @@ Port (
     
     ready_busy_o : out std_logic;
     
+    ctrl_register_i: in std_logic_vector(31 downto 0);
     Mstate_i : in master_states;
     Sstate_i : in substates
 );
@@ -164,24 +177,28 @@ end component;
 
 attribute MARK_DEBUG : string;
 
-
+-----------------------------
 ----- Master FSM signal -----
+-----------------------------
 signal Mstate : master_states := IDLE;
 signal Sstate : substates := subIDLE;
 signal PreviousMstate : master_states := IDLE;
 signal NextSstate : substates := subIDLE;
 signal delay_t : delay_type := CMDWAIT;
+signal enable_s : std_logic := '0'; 
+signal btn_s : std_logic;
 signal counter : integer := 0;
 signal ready_counter : integer := 0;
 signal address_cycle_count : integer := 0;
-signal read_cycle_count : integer := 0; -- use to also count write cycle
+signal read_cycle_count : integer := 0; -- also use to count write cycle
 signal wait_counter : integer := 0;
 signal done : std_logic := '0';
 signal wait_done : std_logic := '0';
 signal controller_ready : std_logic := '0';
 
-
+----------------------------------
 ----- Command control signal -----
+----------------------------------
 signal start_cmd_s : std_logic; 
 signal cle_s : std_logic;
 signal cmd_we_n_s :  std_logic;
@@ -189,7 +206,9 @@ signal cmd_in_s :  std_logic_vector(7 downto 0);
 signal cmd_out_s :  std_logic_vector(7 downto 0);
 signal cmd_busy_s:  std_logic;
 
+----------------------------------
 ----- Address control signal -----
+----------------------------------
 signal start_addr_s :  std_logic;
 signal ale_s :  std_logic;
 signal addr_we_n_s :  std_logic;
@@ -197,44 +216,51 @@ signal addr_in_s :  std_logic_vector(7 downto 0);
 signal addr_out_s :  std_logic_vector(7 downto 0);
 signal addr_busy_s :  std_logic;
 
+-------------------------------------
 ----- Write data control signal -----
+-------------------------------------
 signal start_write_s :  std_logic;
 signal w_we_n_s :  std_logic; 
 signal w_data_in_s :  std_logic_vector(7 downto 0);
 signal w_data_out_s :  std_logic_vector(7 downto 0);
 signal w_busy_s :  std_logic;
 
+------------------------------------
 ----- Read data control signal -----
+------------------------------------
 signal start_read_s :  std_logic;
 signal re_n_s :  std_logic;
 signal r_data_out_s :  std_logic_vector (7 downto 0);
 signal r_data_in_s :  std_logic_vector (7 downto 0);
 signal r_busy_s :  std_logic;
 
-
+-------------------------------------
 ----- Numeric NAND Flash signal -----
+-------------------------------------
 signal ready_busy_s : std_logic;
 
+------------------------
 ----- BRAM signal ------
+------------------------
 signal BRAM_enable : std_logic := '0';
 signal addr_offset : integer := 0;
 signal addr_index : integer := 0;
 signal bram_counter_s : integer := 0;
 
+-------------------------
+----- Timing signal -----
+-------------------------
+signal twp_s:  std_logic_vector(31 downto 0);
+signal tclh_s:  std_logic_vector(31 downto 0);
+signal tcls_s:  std_logic_vector(31 downto 0);
+signal tdh_s:  std_logic_vector(31 downto 0);
+signal trp_s:  std_logic_vector(31 downto 0);
+signal trhz_s:  std_logic_vector(31 downto 0);
+signal tlc_s:  std_logic_vector(31 downto 0);
+signal tla_s:  std_logic_vector(31 downto 0);
 
------ Register signal -----
-signal twp_register_s:  std_logic_vector(31 downto 0);
-signal tclh_register_s:  std_logic_vector(31 downto 0);
-signal tcls_register_s:  std_logic_vector(31 downto 0);
-signal tdh_register_s:  std_logic_vector(31 downto 0);
-signal trp_register_s:  std_logic_vector(31 downto 0);
-signal trhz_register_s:  std_logic_vector(31 downto 0);
-signal tlc_register_s:  std_logic_vector(31 downto 0);
-signal tla_register_s:  std_logic_vector(31 downto 0);
 
 
-signal enable : std_logic := '0'; 
-signal btn : std_logic;
 
 begin
 
@@ -242,10 +268,10 @@ CMD_FSM : latch_command port map
 (
     clk_i => clk,
     start_cmd_i => start_cmd_s,
-    twp_register_i => twp_register_s,
-    tclh_register_i => tclh_register_s,
-    tcls_register_i => tcls_register_s,
-    tlc_register_i => tlc_register_s,
+    twp_i => twp_s,
+    tclh_i => tclh_s,
+    tcls_i => tcls_s,
+    tlc_i => tlc_s,
     cle_o => cle_s,
     cmd_we_n_o => cmd_we_n_s,
     cmd_in_i => cmd_in_s,
@@ -257,9 +283,9 @@ ADDR_FSM : latch_address port map
 (
     clk_i => clk,
     start_addr_i => start_addr_s,
-    twp_register_i => twp_register_s,
-    tdh_register_i => tdh_register_s,
-    tla_register_i => tla_register_s,
+    twp_i => twp_s,
+    tdh_i => tdh_s,
+    tla_i => tla_s,
     ale_o => ale_s,
     addr_we_n_o => addr_we_n_s,
     addr_in_i => addr_in_s,
@@ -271,8 +297,8 @@ WRITE_FSM : write_data port map
 (
     clk_i => clk,
     start_write_i => start_write_s,
-    twp_register_i => twp_register_s,
-    tdh_register_i => tdh_register_s,
+    twp_i => twp_s,
+    tdh_i => tdh_s,
     w_we_n_o => w_we_n_s,
     w_data_in_i => w_data_in_s,
     w_data_out_o => w_data_out_s,
@@ -283,8 +309,8 @@ READ_FSM : read_data port map
 (
     clk_i => clk,
     start_read_i => start_read_s,
-    trp_register_i => trp_register_s,
-    trhz_register_i => trhz_register_s,
+    trp_i => trp_s,
+    trhz_i => trhz_s,
     re_n_o => re_n_s,
     r_data_out_i => r_data_out_s,
     r_data_in_o => r_data_in_s,
@@ -294,14 +320,20 @@ READ_FSM : read_data port map
 PHY_interface : PHY port map 
 ( 
     clk_i => clk,
-    nand_ce_n => nand_ce_n,
+    nand_ce0_n => nand_ce0_n,
+    nand_ce1_n => nand_ce1_n,
+    nand_ce2_n => nand_ce2_n,
+    nand_ce3_n => nand_ce3_n,
     nand_cle => nand_cle,
     nand_ale => nand_ale,
     nand_we_n => nand_we_n,   
     nand_re_n => nand_re_n,
     nand_wp_n => nand_wp_n,
     nand_data => nand_data,
-    nand_rb_n => nand_rb_n,
+    nand_rb0_n => nand_rb0_n,
+    nand_rb1_n => nand_rb1_n,
+    nand_rb2_n => nand_rb2_n,
+    nand_rb3_n => nand_rb3_n,
     
     cle_i => cle_s,
     cmd_we_n_i => cmd_we_n_s,
@@ -319,19 +351,20 @@ PHY_interface : PHY port map
     
     ready_busy_o => ready_busy_s,
     
+    ctrl_register_i => ctrl_register_i,
     Mstate_i => Mstate,
     Sstate_i => Sstate
 );
 
 
-twp_register_s <= twp_register_i;
-tclh_register_s <= tclh_register_i;  
-tcls_register_s <= tcls_register_i;   
-tdh_register_s <= tdh_register_i;   
-trp_register_s <= trp_register_i;  
-trhz_register_s <= trhz_register_i;   
-tlc_register_s <= tlc_register_i;  
-tla_register_s <= tla_register_i;
+twp_s <= twp_register_i;
+tclh_s <= tclh_register_i;  
+tcls_s <= tcls_register_i;   
+tdh_s <= tdh_register_i;   
+trp_s <= trp_register_i;  
+trhz_s <= trhz_register_i;   
+tlc_s <= tlc_register_i;  
+tla_s <= tla_register_i;
 
 start_cmd_s <= '1' when (Sstate = LATCHCMD) else '0';
 start_addr_s <= '1' when (Sstate = LATCHADDR) else '0';
@@ -363,12 +396,12 @@ status_register_o(29 downto 15) <= "000000000000000";
 EN: process(all)
 begin
     if rising_edge(clk) then
-        btn <= dbg_btn_i;
-        if(btn = '1') then
-            enable <= '1';
+        btn_s <= dbg_btn_i;
+        if(btn_s = '1') then
+            enable_s <= '1';
         end if;
-        if (done = '1' and enable = '1') then
-            enable <= '0';
+        if (done = '1' and enable_s = '1') then
+            enable_s <= '0';
         end if;
         
     end if;
@@ -393,7 +426,7 @@ begin
         elsif((ctrl_register_i(0) = '0') and done = '1') then
             done <= '0';
         
-        elsif(ctrl_register_i(0) = '1' and done = '0' and enable = '1') then
+        elsif(ctrl_register_i(0) = '1' and done = '0' and enable_s = '1') then
             
             case Mstate is
             when IDLE =>
@@ -519,15 +552,10 @@ begin
                     NextSstate <= READDATA;
                     Mstate <= SUBWAIT;
                 elsif(Sstate = READDATA) then
-                    --if(ready_busy_s /= '0' and ready_counter = 1) then
-                       -- ready_counter <= 0;
-                        delay_t <= READWAIT;
-                        PreviousMstate <= IDLE;
-                        NextSstate <= subIDLE;
-                        Mstate <= SUBWAIT;
-                    --elsif(ready_busy_s = '0' and ready_counter = 0) then
-                   --     ready_counter <= 1;
-                   -- end if;
+                    delay_t <= READWAIT;
+                    PreviousMstate <= IDLE;
+                    NextSstate <= subIDLE;
+                    Mstate <= SUBWAIT;
                 end if;
                                 
             when READ =>
@@ -758,10 +786,6 @@ begin
                             Sstate <= NextSstate;
                             delay_t <= WRITEDONE;
                             wait_done <= '0';
-                      --  elsif(NextSstate = LATCHADDR) then
-                      --      delay_t <= WAITRB;
-                      --      Mstate <= SUBWAIT;
-                      --      Sstate <= subIDLE;
                         else
                             Sstate <= NextSstate; 
                             Mstate <= PreviousMstate;
@@ -831,7 +855,7 @@ end process;
 
 
 BRAM_enable <= '1' when (wait_counter = 1 and (re_n_s = '0' xor w_we_n_s = '0') and ( Sstate = WRITEDATA or Sstate = READDATA)) else '0';
-write_en_a_o <= '1' when (Sstate = READDATA and BRAM_enable = '1') else '0';
+write_en_a_o <= '1' when (Sstate = READDATA and BRAM_enable = '1') else '0'; -- writing in the BRAM when reading from the NAND Flash
 clk_a_o <= clk;
 
 addr_index <= 0 when cmd_register_i(11 downto 10) = "00" else 

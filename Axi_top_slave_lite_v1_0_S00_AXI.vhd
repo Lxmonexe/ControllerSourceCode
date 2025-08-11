@@ -87,14 +87,20 @@ entity Axi_top_slave_lite_v1_0_S00_AXI is
 		
 		dbg_btn_i : in std_logic;
 		
-		nand_ce_n : out std_logic;
+		nand_ce0_n : out std_logic;
+		nand_ce1_n : out std_logic;
+		nand_ce2_n : out std_logic;
+		nand_ce3_n : out std_logic;
         nand_cle : out std_logic;
         nand_ale : out std_logic;
         nand_we_n : out std_logic;
         nand_re_n : out std_logic;
         nand_wp_n : out std_logic;
         nand_data : inout std_logic_vector(7 downto 0);
-        nand_rb_n : in std_logic
+        nand_rb0_n : in std_logic;
+        nand_rb1_n : in std_logic;
+        nand_rb2_n : in std_logic;
+        nand_rb3_n : in std_logic
 	);
 end Axi_top_slave_lite_v1_0_S00_AXI;
 
@@ -159,7 +165,7 @@ Port (
     ctrl_register_i: in std_logic_vector(31 downto 0);
     addr_register_i: in std_logic_vector(31 downto 0);
     addr_bis_register_i: in std_logic_vector(31 downto 0);
-    status_register_o: out std_logic_vector(31 downto 0);
+    status_register_o: out std_logic_vector(31 downto 0) := "00000000000000000000000000000000";
     twp_register_i: in std_logic_vector(31 downto 0);
     tclh_register_i: in std_logic_vector(31 downto 0);
     tcls_register_i: in std_logic_vector(31 downto 0);
@@ -171,18 +177,24 @@ Port (
     
     clk_a_o      : out  std_logic;
     write_en_a_o : out  std_logic;
-    addr_a_o     : out  std_logic_vector(15 downto 0);
+    addr_a_o     : out  std_logic_vector(15 downto 0) := "0000000000000000";
     data_a_o     : out  std_logic_vector(7 downto 0);
     data_a_i     : in std_logic_vector(7 downto 0);
     
-    nand_ce_n : out std_logic;
+    nand_ce0_n : out std_logic;
+    nand_ce1_n : out std_logic;
+    nand_ce2_n : out std_logic;
+    nand_ce3_n : out std_logic;
     nand_cle : out std_logic;
     nand_ale : out std_logic;
     nand_we_n : out std_logic;
     nand_re_n : out std_logic;
     nand_wp_n : out std_logic;
     nand_data : inout std_logic_vector(7 downto 0);
-    nand_rb_n : in std_logic
+    nand_rb0_n : in std_logic;
+    nand_rb1_n : in std_logic;
+    nand_rb2_n : in std_logic;
+    nand_rb3_n : in std_logic
     );
 end component;
 	
@@ -263,14 +275,20 @@ begin
     data_a_o => data_a_i,
     data_a_i => data_a_o,
     
-    nand_ce_n => nand_ce_n,
+    nand_ce0_n => nand_ce0_n,
+    nand_ce1_n => nand_ce1_n,
+    nand_ce2_n => nand_ce2_n,
+    nand_ce3_n => nand_ce3_n,
     nand_cle => nand_cle,
     nand_ale => nand_ale,
     nand_we_n => nand_we_n,   
     nand_re_n => nand_re_n,
     nand_wp_n => nand_wp_n,
     nand_data => nand_data,
-    nand_rb_n => nand_rb_n
+    nand_rb0_n => nand_rb0_n,
+    nand_rb1_n => nand_rb1_n,
+    nand_rb2_n => nand_rb2_n,
+    nand_rb3_n => nand_rb3_n
 );
 
     BRAM : true_dual_port_bram port map

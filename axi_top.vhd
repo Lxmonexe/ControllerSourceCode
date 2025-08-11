@@ -18,7 +18,6 @@ entity axi_top is
 		-- Users to add ports here
 		clk_controller_i : in std_logic;
 		dbg_btn_i : in std_logic;
-		--rst : in std_logic;
         nand_ce0_n : out std_logic;
         nand_ce1_n : out std_logic;
         nand_ce2_n : out std_logic;
@@ -34,9 +33,6 @@ entity axi_top is
         nand_rb2_n : in std_logic;
         nand_rb3_n : in std_logic;
         
-        ZC706_GPIO_LED : out std_logic_vector(3 downto 0);
-        dbg_switch_i : in std_logic_vector(3 downto 0);
-        dbg_nand_data : out std_logic_vector(7 downto 0); 
 		-- User ports ends
 		-- Do not modify the ports beyond this line
 
@@ -101,14 +97,20 @@ architecture arch_imp of axi_top is
 		
 		dbg_btn_i : in std_logic;
 		
-		nand_ce_n : out std_logic;
+		nand_ce0_n : out std_logic;
+		nand_ce1_n : out std_logic;
+		nand_ce2_n : out std_logic;
+		nand_ce3_n : out std_logic;
         nand_cle : out std_logic;
         nand_ale : out std_logic;
         nand_we_n : out std_logic;
         nand_re_n : out std_logic;
         nand_wp_n : out std_logic;
         nand_data : inout std_logic_vector(7 downto 0);
-        nand_rb_n : in std_logic
+        nand_rb0_n : in std_logic;
+        nand_rb1_n : in std_logic;
+        nand_rb2_n : in std_logic;
+        nand_rb3_n : in std_logic
 		);
 	end component Axi_top_slave_lite_v1_0_S00_AXI;
 
@@ -129,13 +131,9 @@ architecture arch_imp of axi_top is
 --signal nand_data : std_logic_vector(7 downto 0);
 --signal nand_dqs : std_logic := '1'; --interface synchrone
 --signal nand_cle, nand_ale : std_logic ;
---signal nand_ce_n, nand_we_n, nand_re_n : std_logic;
+--signal nand_ce_s, nand_we_n, nand_re_n : std_logic;
 --signal nand_wp_n : std_logic;
---signal nand_rb_n : std_logic;
-
-
-signal nand_ce_s : std_logic;
-signal nand_rb_s : std_logic;
+--signal nand_rb_s : std_logic;
 
 begin
  
@@ -169,14 +167,20 @@ Axi_top_slave_lite_v1_0_S00_AXI_inst : Axi_top_slave_lite_v1_0_S00_AXI
 		S_AXI_RREADY	=> s00_axi_rready,
 		clk_controller_i => clk_controller_i,
 		dbg_btn_i => dbg_btn_i,
-		nand_ce_n => nand_ce_s,
+		nand_ce0_n => nand_ce0_n,
+        nand_ce1_n => nand_ce1_n,
+        nand_ce2_n => nand_ce2_n,
+        nand_ce3_n => nand_ce3_n,
         nand_cle => nand_cle,
         nand_ale => nand_ale,
         nand_we_n => nand_we_n,   
         nand_re_n => nand_re_n,
         nand_wp_n => nand_wp_n,
         nand_data => nand_data,
-        nand_rb_n => nand_rb_s
+        nand_rb0_n => nand_rb0_n,
+        nand_rb1_n => nand_rb1_n,
+        nand_rb2_n => nand_rb2_n,
+        nand_rb3_n => nand_rb3_n
 	);
 
 	-- Add user logic here
@@ -193,44 +197,9 @@ Axi_top_slave_lite_v1_0_S00_AXI_inst : Axi_top_slave_lite_v1_0_S00_AXI
 --    Rb_n => nand_rb_s 
 --);
 
-dbg_nand_data <= nand_data;
-ZC706_GPIO_LED <= dbg_switch_i;
-process(clk_controller_i, nand_ce_s,dbg_switch_i, nand_rb0_n,nand_rb1_n,nand_rb2_n,nand_rb3_n )
-begin
-    if rising_edge(clk_controller_i) then
-        if (dbg_switch_i = "0001") then
-            nand_ce0_n <= nand_ce_s;
-            nand_ce1_n <= '1';
-            nand_ce2_n <= '1';
-            nand_ce3_n <= '1';
-            nand_rb_s <= nand_rb0_n;    
-        elsif(dbg_switch_i = "0010") then
-            nand_ce1_n <= nand_ce_s;
-            nand_ce0_n <= '1';
-            nand_ce2_n <= '1';
-            nand_ce3_n <= '1';
-            nand_rb_s <= nand_rb1_n;
-        elsif(dbg_switch_i = "0100") then
-            nand_ce2_n <= nand_ce_s;
-            nand_ce1_n <= '1';
-            nand_ce0_n <= '1';
-            nand_ce3_n <= '1';
-            nand_rb_s <= nand_rb2_n;
-        elsif(dbg_switch_i = "1000") then
-            nand_ce3_n <= nand_ce_s;
-            nand_ce1_n <= '1';
-            nand_ce2_n <= '1';
-            nand_ce0_n <= '1';
-            nand_rb_s <= nand_rb3_n;
-        else 
-            nand_ce0_n <= nand_ce_s;
-            nand_ce1_n <= '1';
-            nand_ce2_n <= '1';
-            nand_ce3_n <= '1';
-            nand_rb_s <= nand_rb0_n;
-        end if;
-    end if;
-end process;
+
+
+
 	-- User logic ends
 
 

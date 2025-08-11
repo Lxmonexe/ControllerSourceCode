@@ -35,14 +35,20 @@ use work.onfi.all;
 entity PHY is
 Port (
     clk_i : in std_logic; 
-    nand_ce_n : out std_logic;
+    nand_ce0_n : out std_logic;
+    nand_ce1_n : out std_logic;
+    nand_ce2_n : out std_logic;
+    nand_ce3_n : out std_logic;
     nand_cle : out std_logic;
     nand_ale : out std_logic;
     nand_we_n : out std_logic;
     nand_re_n : out std_logic;
     nand_wp_n : out std_logic;
     nand_data : inout std_logic_vector(7 downto 0);
-    nand_rb_n : in std_logic;
+    nand_rb0_n : in std_logic;
+    nand_rb1_n : in std_logic;
+    nand_rb2_n : in std_logic;
+    nand_rb3_n : in std_logic;
      
     cle_i : in std_logic;
     cmd_we_n_i : in std_logic;
@@ -60,6 +66,7 @@ Port (
     
     ready_busy_o : out std_logic;
     
+    ctrl_register_i: in std_logic_vector(31 downto 0);
     Mstate_i : in master_states;
     Sstate_i : in substates
 );
@@ -73,6 +80,7 @@ signal nand_ale_s : std_logic;
 signal nand_we_s : std_logic;
 signal nand_re_s : std_logic;
 signal nand_wp_s : std_logic;
+signal nand_rb_s : std_logic;
 signal nand_data_s : std_logic_vector(7 downto 0);
 
 begin
@@ -93,21 +101,52 @@ nand_data <= cmd_out_i when (Sstate_i = LATCHCMD and Mstate_i /= IDLE) else
              addr_out_i when (Sstate_i = LATCHADDR and Mstate_i /= IDLE) else
              w_data_out_i when (Sstate_i = WRITEDATA and Mstate_i /= IDLE) else "ZZZZZZZZ";
 
-nand_wp_s <= '1' when (Mstate_i /= IDLE) else '0'; -- à revoir 
+nand_wp_s <= '1' when (Mstate_i /= IDLE) else '0'; 
             
+nand_rb_s <= nand_rb0_n when (ctrl_register_i(18 downto 15) = "0001") else            -- selection of the Ready/Busy
+             nand_rb1_n when (ctrl_register_i(18 downto 15) = "0010") else
+             nand_rb2_n when (ctrl_register_i(18 downto 15) = "0100") else
+             nand_rb3_n when (ctrl_register_i(18 downto 15) = "1000") else nand_rb0_n;
 
-
-process(clk_i, nand_rb_n, nand_data)
+process(clk_i,nand_data, nand_rb_s)
 begin
     if rising_edge(clk_i) then
-       ready_busy_o <= nand_rb_n;
+       ready_busy_o <= nand_rb_s;
        r_data_out_o <= nand_data;
-       nand_ce_n <= nand_ce_s;
+       
        nand_cle <= nand_cle_s;
        nand_ale <= nand_ale_s;
        nand_we_n <= nand_we_s;
        nand_re_n <= nand_re_s;
-       nand_wp_n <= nand_wp_s; 
+       nand_wp_n <= nand_wp_s;
+       
+       if(ctrl_register_i(7 downto 4) = "0001") then               -- selection of the Chip Enable
+            nand_ce0_n <= nand_ce_s;
+            nand_ce1_n <= '1';
+            nand_ce2_n <= '1';
+            nand_ce3_n <= '1';
+       elsif (ctrl_register_i(7 downto 4) = "0010") then     
+            nand_ce0_n <= '1';
+            nand_ce1_n <= nand_ce_s;
+            nand_ce2_n <= '1';                                  
+            nand_ce3_n <= '1';
+       elsif (ctrl_register_i(7 downto 4) = "0100") then
+            nand_ce0_n <= '1';
+            nand_ce1_n <= '1';
+            nand_ce2_n <= nand_ce_s;
+            nand_ce3_n <= '1';
+       elsif (ctrl_register_i(7 downto 4) = "1000") then
+            nand_ce0_n <= '1';
+            nand_ce1_n <= '1';
+            nand_ce2_n <= '1';
+            nand_ce3_n <= nand_ce_s;
+       else
+            nand_ce0_n <= nand_ce_s;
+            nand_ce1_n <= '1';
+            nand_ce2_n <= '1';
+            nand_ce3_n <= '1';
+       end if;          
     end if;
 end process;
+
 end Behavioral;

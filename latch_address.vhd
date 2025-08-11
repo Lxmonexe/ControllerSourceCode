@@ -36,9 +36,9 @@ entity latch_address is
 Port (
     clk_i : in std_logic;
     start_addr_i : in std_logic;
-    twp_register_i: in std_logic_vector(31 downto 0);
-    tdh_register_i: in std_logic_vector(31 downto 0);
-    tla_register_i: in std_logic_vector(31 downto 0);
+    twp_i: in std_logic_vector(31 downto 0);
+    tdh_i: in std_logic_vector(31 downto 0);
+    tla_i: in std_logic_vector(31 downto 0);
     ale_o : out std_logic;
     addr_we_n_o : out std_logic;
     addr_in_i : in std_logic_vector(7 downto 0);
@@ -69,9 +69,9 @@ addr_busy_o <= '1' when (state /= IDLE) else '0';
 ADDR_FSM : process(clk_i, start_addr_i)
 begin
     if(rising_edge(clk_i)) then
-        t_wp_s <= TO_INTEGER(unsigned(twp_register_i));
-        t_dh_s <= TO_INTEGER(unsigned(tdh_register_i));
-        t_la_s <= TO_INTEGER(unsigned(tla_register_i));
+        t_wp_s <= TO_INTEGER(unsigned(twp_i));
+        t_dh_s <= TO_INTEGER(unsigned(tdh_i));
+        t_la_s <= TO_INTEGER(unsigned(tla_i));
         case state is
             when IDLE =>
                 if(start_addr_i = '1') then

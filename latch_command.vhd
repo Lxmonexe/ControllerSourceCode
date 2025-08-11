@@ -36,10 +36,10 @@ entity latch_command is
 Port (
     clk_i : in std_logic;
     start_cmd_i : in std_logic;
-    twp_register_i: in std_logic_vector(31 downto 0);
-    tclh_register_i: in std_logic_vector(31 downto 0);
-    tcls_register_i: in std_logic_vector(31 downto 0);
-    tlc_register_i: in std_logic_vector(31 downto 0);  
+    twp_i: in std_logic_vector(31 downto 0);
+    tclh_i: in std_logic_vector(31 downto 0);
+    tcls_i: in std_logic_vector(31 downto 0);
+    tlc_i: in std_logic_vector(31 downto 0);  
     cle_o : out std_logic;
     cmd_we_n_o : out std_logic;
     cmd_in_i : in std_logic_vector(7 downto 0);
@@ -65,16 +65,16 @@ begin
 
 cle_o <= '1' when (state = SET or state = SEND or state = DONE) else '0';
 cmd_we_n_o <= '0' when (state = SEND) else '1';
-cmd_out_o <= cmd_in_i when (state = SEND or state = DONE) else "ZZZZZZZZ"; -- test pattern, should not appear outside due to high Z
+cmd_out_o <= cmd_in_i when (state = SEND or state = DONE) else "ZZZZZZZZ";
 cmd_busy_o <= '1' when (state /= IDLE) else '0';
 
 CMD_FSM : process(clk_i, start_cmd_i)
 begin
     if(rising_edge(clk_i)) then
-        t_wp_s <= TO_INTEGER(unsigned(twp_register_i)); 
-        t_clh_s <= TO_INTEGER(unsigned(tclh_register_i));
-        t_cls_s <= TO_INTEGER(unsigned(tcls_register_i));
-        t_lc_s <= TO_INTEGER(unsigned(tlc_register_i));
+        t_wp_s <= TO_INTEGER(unsigned(twp_i)); 
+        t_clh_s <= TO_INTEGER(unsigned(tclh_i));
+        t_cls_s <= TO_INTEGER(unsigned(tcls_i));
+        t_lc_s <= TO_INTEGER(unsigned(tlc_i));
         case state is 
             when IDLE => 
                 if(start_cmd_i = '1') then
@@ -101,7 +101,7 @@ begin
                 else
                     counter <= counter + 1;
                 end if;     
-            when FINISH =>                      -- wait t_cls for the address after
+            when FINISH =>                      -- wait t_cls before eventually latch the address
                 if(counter = t_cls_s) then
                     counter <= 0;
                     state <= IDLE;
