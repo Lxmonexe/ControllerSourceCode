@@ -3,6 +3,9 @@ from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge, Timer
 from cocotbext.axi import AxiLiteMaster, AxiLiteBus
 
+# Example data to write into BRAM (replace with actual test value if needed)
+BRAM_TEST_DATA = 151520258
+
 async def clk_gen(dut,clk, period1_ns=10, period2_ns=8):  
     """ Clock generator """
     cocotb.start_soon(Clock(dut.clk_controller_i, period1_ns, units="ns").start()) #controller clock
@@ -66,7 +69,8 @@ async def run_test(dut):
 
     # Write data into the BRAM
     for i in range(2300):
-        await axi_master.write(0x30000 + i * 4, (151520258).to_bytes(4, 'little'))
+        # Write BRAM_TEST_DATA to each address
+        await axi_master.write(0x30000 + i * 4, (BRAM_TEST_DATA).to_bytes(4, 'little'))
 
     # Write data command
     await axi_master.write(0x0000c, (67108864).to_bytes(4, 'little'))
