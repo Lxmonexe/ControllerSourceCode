@@ -71,12 +71,12 @@ ControllerSourceCode/
 
 1. **Install Python dependencies**  
    ```sh
-   pip install cocotb cocotb-test
+   pip install cocotb cocotb-test cocotbext-axi
    ```
 
 2. **Run the testbench**  
    ```sh
-   pytest testbench/run_test.py
+   pytest -o log cli=True testbench/run_test.py
    ```
 
 3. **View simulation results**  
