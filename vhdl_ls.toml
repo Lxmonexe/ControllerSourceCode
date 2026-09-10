@@ -1,5 +1,5 @@
 [libraries]
-work.files = [
+defaultlib.files = [
     "log_pkg.vhd",
     "onfi_package.vhd",
     "latch_address.vhd",
@@ -12,7 +12,7 @@ work.files = [
     "axi_top.vhd",
     "Axi_top_slave_lite_v1_0_S00_AXI.vhd",
 ]
-work.include_dirs = ["."]
+defaultlib.include_dirs = ["."]
 
 nand_model.files = [
     "nand_model/nand_defines.vh",

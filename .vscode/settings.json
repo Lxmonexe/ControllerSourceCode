@@ -29,13 +29,18 @@
   ],
   "vhdl.ls.libraries": [
     {
-      "name": "work",
+      "name": "defaultlib",
       "root": ".",
       "files": [
-        "*.vhd",
-        "*.vh",
-        "nand_model/*.v",
-        "nand_model/*.vh"
+        "*.vhd"
+      ]
+    },
+    {
+      "name": "nand_model",
+      "root": "./nand_model",
+      "files": [
+        "*.v",
+        "*.vh"
       ]
     }
   ],
