@@ -1,26 +1,31 @@
-[libraries]
-defaultlib.files = [
-    "log_pkg.vhd",
-    "onfi_package.vhd",
-    "latch_address.vhd",
-    "latch_command.vhd",
-    "read_data.vhd",
-    "write_data.vhd",
-    "PHY.vhd",
-    "true_dual_port_bram.vhd",
-    "Controller_top.vhd",
-    "axi_top.vhd",
-    "Axi_top_slave_lite_v1_0_S00_AXI.vhd",
-]
-defaultlib.include_dirs = ["."]
+# File names are either absolute or relative to the parent folder of the
+# vhdl_ls.toml file and supports glob-style patterns.
 
-nand_model.files = [
-    "nand_model/nand_defines.vh",
-    "nand_model/nand_parameters.vh",
-    "nand_model/nand_model.v",
-    "nand_model/nand_die_model.v",
+[libraries]
+
+# Main VHDL library for ONFI Controller project
+defaultlib.files = [
+    'log_pkg.vhd',
+    'onfi_package.vhd',
+    'latch_address.vhd',
+    'latch_command.vhd',
+    'read_data.vhd',
+    'write_data.vhd',
+    'PHY.vhd',
+    'true_dual_port_bram.vhd',
+    'Controller_top.vhd',
+    'axi_top.vhd',
+    'Axi_top_slave_lite_v1_0_S00_AXI.vhd',
 ]
-nand_model.include_dirs = ["./nand_model"]
+
+# NAND model library (Verilog files)
+nand_model.files = [
+    'nand_model/nand_defines.vh',
+    'nand_model/nand_parameters.vh',
+    'nand_model/nand_model.v',
+    'nand_model/nand_die_model.v',
+]
+nand_model.is_third_party = true
 
 [lint]
 enabled = true
