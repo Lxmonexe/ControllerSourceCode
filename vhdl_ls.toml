@@ -1,0 +1,34 @@
+[libraries]
+work.files = [
+    "log_pkg.vhd",
+    "onfi_package.vhd",
+    "latch_address.vhd",
+    "latch_command.vhd",
+    "read_data.vhd",
+    "write_data.vhd",
+    "PHY.vhd",
+    "true_dual_port_bram.vhd",
+    "Controller_top.vhd",
+    "axi_top.vhd",
+    "Axi_top_slave_lite_v1_0_S00_AXI.vhd",
+]
+work.include_dirs = ["."]
+
+nand_model.files = [
+    "nand_model/nand_defines.vh",
+    "nand_model/nand_parameters.vh",
+    "nand_model/nand_model.v",
+    "nand_model/nand_die_model.v",
+]
+nand_model.include_dirs = ["./nand_model"]
+
+[lint]
+enabled = true
+severity = "error"
+rules = [
+    { name = "style", enabled = true },
+    { name = "synthesis", enabled = true },
+]
+
+[analyze]
+enabled = true
