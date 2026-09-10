@@ -28,12 +28,8 @@ nand_model.files = [
 nand_model.is_third_party = true
 
 [lint]
-enabled = true
-severity = "error"
-rules = [
-    { name = "style", enabled = true },
-    { name = "synthesis", enabled = true },
-]
+style.enabled = true
+synthesis.enabled = true
 
 [analyze]
 enabled = true
