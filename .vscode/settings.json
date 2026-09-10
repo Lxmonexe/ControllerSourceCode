@@ -1,0 +1,54 @@
+{
+  "vhdl.ls.path": "vhdl_ls",
+  "vhdl.ls.analyzeOnSave": true,
+  "vhdl.ls.autoFormat": true,
+  "vhdl.ls.formatOnSave": true,
+  "vhdl.ls.lintOnSave": true,
+  "vhdl.ls.lintAsYouType": true,
+  "vhdl.ls.hoverOnRange": true,
+  "vhdl.ls.codeLens": true,
+  "vhdl.ls.codeActions": true,
+  "vhdl.ls.completion": true,
+  "vhdl.ls.symbol": true,
+  "vhdl.ls.references": true,
+  "vhdl.ls.implementation": true,
+  "vhdl.ls.definition": true,
+  "vhdl.ls.typeDefinition": true,
+  "vhdl.ls.documentSymbol": true,
+  "vhdl.ls.workspaceSymbol": true,
+  "vhdl.ls.signatureHelp": true,
+  "vhdl.ls.hover": true,
+  "vhdl.ls.highlight": true,
+  "vhdl.ls.rename": true,
+  "vhdl.ls.codeLens.references": true,
+  "vhdl.ls.codeLens.implementations": true,
+  "vhdl.ls.codeLens.testbench": true,
+  "vhdl.ls.includePaths": [
+    ".",
+    "./nand_model"
+  ],
+  "vhdl.ls.libraries": [
+    {
+      "name": "work",
+      "root": ".",
+      "files": [
+        "*.vhd",
+        "*.vh",
+        "nand_model/*.v",
+        "nand_model/*.vh"
+      ]
+    }
+  ],
+  "files.autoSave": "onFocusChange",
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "mshr-h.vhdl-ls",
+  "[vhdl]": {
+    "editor.defaultFormatter": "mshr-h.vhdl-ls"
+  },
+  "files.exclude": {
+    "**/.git": true,
+    "**/.vscode": true
+  },
+  "vhdl.ls.ghdl.lint": true,
+  "vhdl.ls.ghdl.analyze": true
+}

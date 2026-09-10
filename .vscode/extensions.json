@@ -1,0 +1,13 @@
+{
+  "recommendations": [
+    {
+      "name": "mshr-h.vhdl-ls",
+      "version": "0.15.0"
+    },
+    {
+      "name": "tclovinger.vhdl",
+      "version": "1.0.0"
+    }
+  ],
+  "unwantedRecommendations": []
+}

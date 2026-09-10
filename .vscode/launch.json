@@ -1,0 +1,19 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "VHDL Lint",
+      "type": "vhdl-ls",
+      "request": "launch",
+      "command": "lint",
+      "files": ["**/*.vhd", "**/*.vh"]
+    },
+    {
+      "name": "VHDL Analyze",
+      "type": "vhdl-ls",
+      "request": "launch",
+      "command": "analyze",
+      "files": ["**/*.vhd", "**/*.vh"]
+    }
+  ]
+}

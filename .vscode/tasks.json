@@ -1,0 +1,48 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "VHDL Lint",
+      "type": "shell",
+      "command": "vhdl_ls",
+      "args": [
+        "lint",
+        "--path",
+        ".",
+        "**/*.vhd",
+        "**/*.vh"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "VHDL Analyze",
+      "type": "shell",
+      "command": "vhdl_ls",
+      "args": [
+        "analyze",
+        "--path",
+        ".",
+        "**/*.vhd",
+        "**/*.vh"
+      ],
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Run Testbench",
+      "type": "shell",
+      "command": "pytest",
+      "args": [
+        "-o",
+        "log_cli=True",
+        "testbench/run_test.py"
+      ],
+      "group": "test",
+      "problemMatcher": []
+    }
+  ]
+}
